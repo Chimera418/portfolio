@@ -17,6 +17,9 @@ import CaptchaModal from "../components/CaptchaModal.astro";
       href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=Press+Start+2P&display=swap"
       rel="stylesheet"
     />
+    <!-- Aggressively preload heavy 404 assets so they're ready on first visit -->
+    <link rel="preload" href="/video/never-gonna-meow-you-up.mp4" as="video" type="video/mp4" fetchpriority="high" />
+    <link rel="preload" href="/audio/voice-of-no-return.opus" as="audio" type="audio/ogg" fetchpriority="low" />
   </head>
   <body class="w-screen h-screen overflow-hidden bg-black m-0 p-0">
     <CommandPalette />
@@ -31,7 +34,9 @@ import CaptchaModal from "../components/CaptchaModal.astro";
         src="/video/never-gonna-meow-you-up.mp4"
         autoplay
         loop
-        playsinline></video>
+        muted
+        playsinline
+        preload="auto"></video>
     </div>
 
     <!-- UI Overlay -->

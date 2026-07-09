@@ -18,7 +18,7 @@ import ThemeDrawer from './ThemeDrawer.astro';
       <a href="/" class="hover:text-primary transition-colors">Home</a>
       <a href="/about" class="hover:text-primary transition-colors">About</a>
       <a href="/projects" class="hover:text-primary transition-colors">Projects</a>
-      <a href="/devlog" class="hover:text-primary transition-colors">Devlog</a>
+      <a href="/archive" class="hover:text-primary transition-colors">Archive</a>
       <a href="/labs" id="nav-labs-link" class="hover:text-primary transition-colors hidden">Labs</a>
       <a href="/games" id="nav-games-link" class="hover:text-primary transition-colors hidden">Games</a>
       <a href="/guestbook" class="hover:text-primary transition-colors">Guestbook</a>
@@ -156,7 +156,9 @@ import ThemeDrawer from './ThemeDrawer.astro';
   
   const initAudio = () => {
     if (!lofiAudio) {
-      lofiAudio = new Audio('/audio/voice-of-no-return.mp3');
+      // Use Opus (35% smaller, transparent quality) with MP3 fallback for old browsers
+      const canOpus = (new Audio()).canPlayType('audio/ogg; codecs=opus') !== '';
+      lofiAudio = new Audio(canOpus ? '/audio/voice-of-no-return.opus' : '/audio/voice-of-no-return.mp3');
       lofiAudio.preload = 'auto';
       lofiAudio.loop = true;
       lofiAudio.volume = 0.35;
