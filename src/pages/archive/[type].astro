@@ -1,0 +1,55 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import Navbar from '../../components/Navbar.astro';
+import ArchiveCard from '../../components/archive/ArchiveCard.astro';
+import { getArchiveEntries } from '../../lib/notion/queries';
+import type { ArchiveType } from '../../lib/notion/types';
+
+const { type } = Astro.params;
+
+// Validate type
+const allowedTypes = ['devlogs', 'blogs', 'writeups', 'notes'];
+if (!type || !allowedTypes.includes(type)) {
+  return Astro.rewrite('/404');
+}
+
+const entries = await getArchiveEntries(type as ArchiveType);
+const folderTitle = type.charAt(0).toUpperCase() + type.slice(1);
+---
+
+<Layout title={`${folderTitle} | Archive`}>
+  <Navbar />
+  
+  <div class="mt-8 max-w-4xl mx-auto space-y-12 animate-fade-in">
+    <section class="text-center">
+      <h1 class="text-4xl md:text-5xl font-bold text-text-primary mb-4">
+        {folderTitle}
+      </h1>
+      <p class="text-lg text-text-muted">
+        <a href="/archive" class="hover:text-primary transition-colors hover:underline">← Back to Archive</a>
+      </p>
+    </section>
+
+    <section class="space-y-6">
+      {entries.length === 0 ? (
+        <div class="text-center text-text-muted py-12">
+          <p>No published entries found in this folder.</p>
+        </div>
+      ) : (
+        entries.map((entry) => (
+          <ArchiveCard entry={entry} />
+        ))
+      )}
+    </section>
+  </div>
+</Layout>
+
+<style>
+  .animate-fade-in {
+    animation: fadeIn 0.5s ease-out forwards;
+  }
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+</style>

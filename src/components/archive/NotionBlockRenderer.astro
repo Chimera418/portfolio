@@ -1,0 +1,97 @@
+---
+import NotionBlockRenderer from './NotionBlockRenderer.astro';
+export interface Props {
+  blocks: any[];
+}
+const { blocks } = Astro.props;
+
+function getRichText(richTextArr: any[]) {
+  if (!richTextArr) return '';
+  return richTextArr.map((t: any) => {
+    let text = t.plain_text;
+    if (t.href) text = `<a href="${t.href}" class="text-accent hover:underline">${text}</a>`;
+    if (t.annotations.bold) text = `<strong>${text}</strong>`;
+    if (t.annotations.italic) text = `<em>${text}</em>`;
+    if (t.annotations.strikethrough) text = `<del>${text}</del>`;
+    if (t.annotations.underline) text = `<u>${text}</u>`;
+    if (t.annotations.code) text = `<code class="bg-base/50 text-accent px-1 rounded">${text}</code>`;
+    return text;
+  }).join('');
+}
+---
+
+{blocks.map((block) => {
+  const { type, id } = block;
+
+  if (type === 'paragraph') {
+    return <p class="mb-4 whitespace-pre-wrap" set:html={getRichText(block.paragraph.rich_text)}></p>;
+  }
+  
+  if (type === 'heading_1') {
+    return <h1 class="text-3xl font-bold mt-8 mb-4" set:html={getRichText(block.heading_1.rich_text)}></h1>;
+  }
+  
+  if (type === 'heading_2') {
+    return <h2 class="text-2xl font-bold mt-8 mb-4 text-accent" set:html={getRichText(block.heading_2.rich_text)}></h2>;
+  }
+  
+  if (type === 'heading_3') {
+    return <h3 class="text-xl font-bold mt-6 mb-3" set:html={getRichText(block.heading_3.rich_text)}></h3>;
+  }
+  
+  if (type === 'bulleted_list_item') {
+    return (
+      <li class="ml-6 list-disc mb-1">
+        <span set:html={getRichText(block.bulleted_list_item.rich_text)}></span>
+        {block.children && <ul class="mt-1"><NotionBlockRenderer blocks={block.children} /></ul>}
+      </li>
+    );
+  }
+  
+  if (type === 'numbered_list_item') {
+    return (
+      <li class="ml-6 list-decimal mb-1">
+        <span set:html={getRichText(block.numbered_list_item.rich_text)}></span>
+        {block.children && <ol class="mt-1"><NotionBlockRenderer blocks={block.children} /></ol>}
+      </li>
+    );
+  }
+
+  if (type === 'quote') {
+    return <blockquote class="border-l-4 border-accent pl-4 italic my-4 opacity-80" set:html={getRichText(block.quote.rich_text)}></blockquote>;
+  }
+
+  if (type === 'code') {
+    return (
+      <pre class="bg-crust p-4 rounded-lg overflow-x-auto my-4 text-sm border border-surface0"><code class={`language-${block.code.language}`}>{block.code.rich_text[0]?.plain_text}</code></pre>
+    );
+  }
+
+  if (type === 'image') {
+    const src = block.image.type === 'external' ? block.image.external.url : block.image.file.url;
+    const caption = block.image.caption?.length ? getRichText(block.image.caption) : '';
+    return (
+      <figure class="my-6">
+        <img src={src} alt={caption.replace(/<[^>]*>?/gm, '')} class="rounded-lg max-w-full h-auto border border-surface0" loading="lazy" />
+        {caption && <figcaption class="text-sm text-subtext0 mt-2 text-center" set:html={caption}></figcaption>}
+      </figure>
+    );
+  }
+
+  if (type === 'divider') {
+    return <hr class="border-surface0 my-8" />;
+  }
+  
+  if (type === 'callout') {
+    const icon = block.callout.icon?.type === 'emoji' ? block.callout.icon.emoji : '💡';
+    return (
+      <div class="bg-surface0/50 p-4 rounded-lg my-4 flex gap-3 items-start border border-surface1">
+        <div class="text-xl">{icon}</div>
+        <div class="text-sm" set:html={getRichText(block.callout.rich_text)}></div>
+      </div>
+    );
+  }
+
+  // Fallback for unsupported block types
+  return <div class="hidden" data-unsupported-block={type}></div>;
+})}
