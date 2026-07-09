@@ -212,14 +212,6 @@
         if (window.Runner && Runner.instance_) {
           Runner.instance_.isDarkMode = isDark;
         }
-      } else if (e.data.type === 'PAUSE') {
-        if (window.Runner && Runner.instance_ && Runner.instance_.playing && !Runner.instance_.crashed) {
-          Runner.instance_.stop();
-        }
-      } else if (e.data.type === 'RESUME') {
-        if (window.Runner && Runner.instance_ && Runner.instance_.paused && !Runner.instance_.crashed) {
-          Runner.instance_.play();
-        }
       }
     });
   </script>

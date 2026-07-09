@@ -1,0 +1,719 @@
+---
+// No layout used because we want a completely custom standalone view
+import "../styles/global.css";
+
+// Import game components for the Games window
+import ChromeDino  from '../components/os-games/ChromeDino.astro';
+import Snake       from '../components/os-games/Snake.astro';
+import Tetris      from '../components/os-games/Tetris.astro';
+import Game2048    from '../components/os-games/Game2048.astro';
+import FlappyBird  from '../components/os-games/FlappyBird.astro';
+import MemoryMatch from '../components/os-games/MemoryMatch.astro';
+import TicTacToe   from '../components/os-games/TicTacToe.astro';
+import Wordle      from '../components/os-games/Wordle.astro';
+import Connect4    from '../components/os-games/Connect4.astro';
+import DontWordle  from '../components/os-games/DontWordle.astro';
+import ColorGuesser from '../components/os-games/ColorGuesser.astro';
+import GravityMaze from '../components/os-games/GravityMaze.astro';
+
+const projectFiles = Object.values(import.meta.glob('../content/projects/*.md', { eager: true }));
+const projects = projectFiles.map((file: any) => ({
+  id: file.file.split('/').pop().replace('.md', ''),
+  title: file.frontmatter.title,
+  description: file.frontmatter.description
+}));
+---
+<!doctype html>
+<html lang="en" data-theme="mocha">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="description" content="Chimera OS" />
+    <meta name="viewport" content="width=device-width" />
+    <link rel="icon" type="image/svg+xml" href="/chimera-favicon.svg" />
+    <title>Chimera OS</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet" />
+  </head>
+  <body class="bg-[#111] h-[100dvh] flex flex-col items-center justify-center overflow-hidden perspective-[1200px]">
+    <!-- Desk Setup Container -->
+    <div class="flex flex-col items-center justify-center gap-4 md:gap-6 w-full max-w-[calc(70vh*1.6)] px-2 md:px-0 transform-style-preserve-3d" style="transform: rotateX(2deg);">
+      
+      <!-- Physical Monitor Frame -->
+      <div class="monitor-frame relative w-full bg-[#e4e4e4] rounded-sm p-4 md:p-8 shadow-[0_40px_100px_rgba(0,0,0,0.8),inset_0_2px_5px_rgba(255,255,255,0.8),inset_0_-5px_15px_rgba(0,0,0,0.2)] mx-auto z-10 transition-transform hover:scale-[1.01] duration-500" style="aspect-ratio: 16/10;">
+        <!-- Inner Bezel -->
+        <div class="inner-bezel w-full h-full bg-[#3a3a3a] rounded-sm p-3 md:p-6 shadow-[inset_0_0_15px_rgba(0,0,0,0.9)] relative">
+          <!-- The Actual CRT Screen -->
+          <div class="crt-screen relative w-full h-full bg-[#008080] rounded-sm overflow-hidden shadow-[inset_0_0_80px_rgba(0,0,0,1)] border-[4px] border-[#111]">
+            <!-- Screen Glare / Reflection -->
+            <div class="absolute inset-0 pointer-events-none z-50 bg-gradient-to-br from-white/10 via-transparent to-transparent rounded-sm"></div>
+            
+            <!-- Desktop Environment -->
+            <div id="desktop" class="absolute inset-0 pb-8 p-4 flex flex-col gap-6 flex-wrap content-start z-10">
+              <!-- Desktop Icons -->
+              <div class="desktop-icon cursor-pointer flex flex-col items-center text-center w-16" data-target="window-terminal" ondblclick="openWindow('window-terminal')">
+                <div class="w-10 h-10 mb-1 bg-black border-2 border-gray-400 flex items-center justify-center text-green text-[10px] font-pixel shadow-sm transition-transform active:scale-95">C:\</div>
+                <span class="text-white text-[10px] font-sans font-bold bg-[#008080] px-1 truncate w-full">Terminal</span>
+              </div>
+              
+              <div class="desktop-icon cursor-pointer flex flex-col items-center text-center w-16" data-target="window-games" ondblclick="openWindow('window-games')">
+                <div class="w-10 h-10 mb-1 bg-yellow-400 text-2xl flex items-center justify-center border-2 border-white shadow-sm shadow-black/50 transition-transform active:scale-95">📁</div>
+                <span class="text-white text-[10px] font-sans font-bold bg-[#008080] px-1 truncate w-full">Games</span>
+              </div>
+
+              <div class="desktop-icon cursor-pointer flex flex-col items-center text-center w-16" data-target="window-devlogs" ondblclick="openWindow('window-devlogs')">
+                <div class="w-10 h-10 mb-1 bg-yellow-400 text-2xl flex items-center justify-center border-2 border-white shadow-sm shadow-black/50 transition-transform active:scale-95">📁</div>
+                <span class="text-white text-[10px] font-sans font-bold bg-[#008080] px-1 truncate w-full">Archives</span>
+              </div>
+
+              <div class="desktop-icon cursor-pointer flex flex-col items-center text-center w-16" data-target="window-labs" ondblclick="openWindow('window-labs')">
+                <div class="w-10 h-10 mb-1 bg-yellow-400 text-2xl flex items-center justify-center border-2 border-white shadow-sm shadow-black/50 transition-transform active:scale-95">📁</div>
+                <span class="text-white text-[10px] font-sans font-bold bg-[#008080] px-1 truncate w-full">Labs</span>
+              </div>
+
+              <div class="desktop-icon cursor-pointer flex flex-col items-center text-center w-16" data-target="window-readme" ondblclick="openWindow('window-readme')">
+                <div class="w-10 h-10 mb-1 bg-white border border-gray-400 flex items-center justify-center text-[10px] text-black font-serif shadow-sm transition-transform active:scale-95">TXT</div>
+                <span class="text-white text-[10px] font-sans font-bold bg-[#008080] px-1 truncate w-full">readme</span>
+              </div>
+            </div>
+
+            <!-- Windows Container -->
+            <div id="windows-container" class="absolute inset-0 pointer-events-none z-30 overflow-hidden pb-[28px]">
+              
+              <!-- Terminal Window -->
+              <div id="window-terminal" class="os-window hidden absolute top-4 left-4 w-[85%] h-[80%] bg-surface-container border-[3px] border-gray-200 shadow-[2px_2px_10px_rgba(0,0,0,0.5)] pointer-events-auto flex flex-col" onmousedown="bringToFront(this)">
+                <div class="window-titlebar bg-[#000080] text-white flex justify-between items-center px-1.5 py-1 border-b-2 border-gray-300 cursor-default select-none">
+                  <span class="font-pixel text-[8px] tracking-widest">Command Prompt</span>
+                  <button class="close-btn bg-[#c0c0c0] text-black border-t-2 border-l-2 border-white border-b-2 border-r-2 border-gray-600 w-4 h-4 flex items-center justify-center font-bold text-[10px] leading-none active:border-t-gray-600 active:border-l-gray-600 active:border-b-white active:border-r-white" onclick="closeWindow('window-terminal')">x</button>
+                </div>
+                <div class="window-content flex-grow relative bg-[#111]">
+                  <!-- Terminal Content -->
+                  <div id="terminal-container" class="absolute inset-0 p-3 overflow-y-auto break-words font-pixel text-[8px] md:text-[10px] leading-relaxed text-primary custom-scroll" onclick="document.getElementById('cmd-input').focus()">
+                      <div id="terminal-output" class="flex flex-col gap-1 pb-2 tracking-wider leading-loose">
+                      <div class="text-secondary mb-4">
+                        CHIMERA OS [Version 1.0.42]<br/>
+                        (c) Chimera Corporation. All rights reserved.<br/><br/>
+                        Type 'help' for commands.
+                      </div>
+                    </div>
+                    <div class="flex items-center text-text-primary w-full">
+                      <span class="text-green mr-2 font-bold shrink-0" id="prompt-prefix">C:\></span>
+                      <input type="text" id="cmd-input" class="flex-grow min-w-0 w-full bg-transparent border-none outline-none text-text-primary font-pixel text-[8px] md:text-[10px] tracking-wider caret-primary" autocomplete="off" spellcheck="false" />
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Games Folder Window -->
+              <div id="window-games" class="os-window hidden absolute top-8 left-8 w-[80%] h-[70%] bg-[#c0c0c0] border-[3px] border-gray-200 shadow-[2px_2px_10px_rgba(0,0,0,0.5)] pointer-events-auto flex flex-col" onmousedown="bringToFront(this)">
+                <div class="window-titlebar bg-[#000080] text-white flex justify-between items-center px-1.5 py-1 cursor-default select-none">
+                  <span class="font-pixel text-[8px] tracking-widest">C:\GAMES</span>
+                  <button class="close-btn bg-[#c0c0c0] text-black border-t-2 border-l-2 border-white border-b-2 border-r-2 border-gray-600 w-4 h-4 flex items-center justify-center font-bold text-[10px] leading-none active:border-t-gray-600 active:border-l-gray-600 active:border-b-white active:border-r-white" onclick="closeWindow('window-games')">x</button>
+                </div>
+                <div class="window-content flex-grow p-4 flex gap-6 flex-wrap content-start overflow-y-auto os-scroll font-sans text-black bg-white border-[3px] border-t-gray-600 border-l-gray-600 border-b-white border-r-white m-1">
+                  <div class="text-center w-16 cursor-pointer hover:bg-blue-600 hover:text-white p-1 select-none group" ondblclick="launchGame('snake')">
+                    <div class="w-10 h-10 mx-auto bg-green-500 rounded-sm shadow border border-gray-400 flex items-center justify-center text-white text-xl">🐍</div>
+                    <div class="text-[10px] mt-1 group-hover:bg-blue-800">Snake.exe</div>
+                  </div>
+                  <div class="text-center w-16 cursor-pointer hover:bg-blue-600 hover:text-white p-1 select-none group" ondblclick="launchGame('tetris')">
+                    <div class="w-10 h-10 mx-auto bg-red-500 rounded-sm shadow border border-gray-400 flex items-center justify-center text-white text-xl">🧱</div>
+                    <div class="text-[10px] mt-1 group-hover:bg-blue-800">Tetris.exe</div>
+                  </div>
+                  <div class="text-center w-16 cursor-pointer hover:bg-blue-600 hover:text-white p-1 select-none group" ondblclick="launchGame('dino')">
+                    <div class="w-10 h-10 mx-auto bg-gray-500 rounded-sm shadow border border-gray-400 flex items-center justify-center text-white text-xl">🦖</div>
+                    <div class="text-[10px] mt-1 group-hover:bg-blue-800">Dino.exe</div>
+                  </div>
+                  <div class="text-center w-16 cursor-pointer hover:bg-blue-600 hover:text-white p-1 select-none group" ondblclick="launchGame('2048')">
+                    <div class="w-10 h-10 mx-auto bg-yellow-500 rounded-sm shadow border border-gray-400 flex items-center justify-center text-white text-xl">🔢</div>
+                    <div class="text-[10px] mt-1 group-hover:bg-blue-800">2048.exe</div>
+                  </div>
+                  <div class="text-center w-16 cursor-pointer hover:bg-blue-600 hover:text-white p-1 select-none group" ondblclick="launchGame('flappy')">
+                    <div class="w-10 h-10 mx-auto bg-blue-500 rounded-sm shadow border border-gray-400 flex items-center justify-center text-white text-xl">🐦</div>
+                    <div class="text-[10px] mt-1 group-hover:bg-blue-800">Flappy.exe</div>
+                  </div>
+                  <div class="text-center w-16 cursor-pointer hover:bg-blue-600 hover:text-white p-1 select-none group" ondblclick="launchGame('memory')">
+                    <div class="w-10 h-10 mx-auto bg-purple-500 rounded-sm shadow border border-gray-400 flex items-center justify-center text-white text-xl">🧠</div>
+                    <div class="text-[10px] mt-1 group-hover:bg-blue-800">Memory.exe</div>
+                  </div>
+                  <div class="text-center w-16 cursor-pointer hover:bg-blue-600 hover:text-white p-1 select-none group" ondblclick="launchGame('tictactoe')">
+                    <div class="w-10 h-10 mx-auto bg-orange-500 rounded-sm shadow border border-gray-400 flex items-center justify-center text-white text-xl">❌</div>
+                    <div class="text-[10px] mt-1 group-hover:bg-blue-800">TicTacToe.exe</div>
+                  </div>
+                  <div class="text-center w-16 cursor-pointer hover:bg-blue-600 hover:text-white p-1 select-none group" ondblclick="launchGame('wordle')">
+                    <div class="w-10 h-10 mx-auto bg-green-600 rounded-sm shadow border border-gray-400 flex items-center justify-center text-white text-xl">📝</div>
+                    <div class="text-[10px] mt-1 group-hover:bg-blue-800">Wordle.exe</div>
+                  </div>
+                  <div class="text-center w-16 cursor-pointer hover:bg-blue-600 hover:text-white p-1 select-none group" ondblclick="launchGame('connect4')">
+                    <div class="w-10 h-10 mx-auto bg-yellow-400 rounded-sm shadow border border-gray-400 flex items-center justify-center text-white text-xl">🟡</div>
+                    <div class="text-[10px] mt-1 group-hover:bg-blue-800">Connect4.exe</div>
+                  </div>
+                  <div class="text-center w-16 cursor-pointer hover:bg-blue-600 hover:text-white p-1 select-none group" ondblclick="launchGame('dontwordle')">
+                    <div class="w-10 h-10 mx-auto bg-red-600 rounded-sm shadow border border-gray-400 flex items-center justify-center text-white text-xl">💣</div>
+                    <div class="text-[10px] mt-1 group-hover:bg-blue-800">DontWordle.exe</div>
+                  </div>
+                  <div class="text-center w-16 cursor-pointer hover:bg-blue-600 hover:text-white p-1 select-none group" ondblclick="launchGame('colorguesser')">
+                    <div class="w-10 h-10 mx-auto bg-gradient-to-br from-red-500 via-green-500 to-blue-500 rounded-sm shadow border border-gray-400 flex items-center justify-center text-white text-xl">🎨</div>
+                    <div class="text-[10px] mt-1 group-hover:bg-blue-800">ColorGuess.exe</div>
+                  </div>
+                  <div class="text-center w-16 cursor-pointer hover:bg-blue-600 hover:text-white p-1 select-none group" ondblclick="launchGame('gravitymaze')">
+                    <div class="w-10 h-10 mx-auto bg-purple-600 rounded-sm shadow border border-gray-400 flex items-center justify-center text-white text-xl">🌌</div>
+                    <div class="text-[10px] mt-1 group-hover:bg-blue-800">Gravity.exe</div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Readme Window -->
+              <div id="window-readme" class="os-window hidden absolute top-12 left-12 w-[60%] h-[50%] bg-[#c0c0c0] border-[3px] border-gray-200 shadow-[2px_2px_10px_rgba(0,0,0,0.5)] pointer-events-auto flex flex-col" onmousedown="bringToFront(this)">
+                <div class="window-titlebar bg-[#000080] text-white flex justify-between items-center px-1.5 py-1 cursor-default select-none">
+                  <span class="font-pixel text-[8px] tracking-widest">Notepad - readme.txt</span>
+                  <button class="close-btn bg-[#c0c0c0] text-black border-t-2 border-l-2 border-white border-b-2 border-r-2 border-gray-600 w-4 h-4 flex items-center justify-center font-bold text-[10px] leading-none active:border-t-gray-600 active:border-l-gray-600 active:border-b-white active:border-r-white" onclick="closeWindow('window-readme')">x</button>
+                </div>
+                <div class="window-content flex-grow p-2 overflow-y-auto os-scroll font-sans text-black text-[12px] whitespace-pre-wrap bg-white border-[3px] border-t-gray-600 border-l-gray-600 border-b-white border-r-white m-1 font-mono">
+Welcome to Chimera OS!
+
+This system is built for those who appreciate retro interfaces.
+Explore the folders to see my projects and experiments.
+You can run classic games in the GAMES folder, or use the Terminal to navigate the site. Have fun!
+
+- Aneesh
+                </div>
+              </div>
+
+              <!-- Archives Folder Window -->
+              <div id="window-devlogs" class="os-window hidden absolute top-16 left-16 w-[75%] h-[65%] bg-[#c0c0c0] border-[3px] border-gray-200 shadow-[2px_2px_10px_rgba(0,0,0,0.5)] pointer-events-auto flex flex-col" onmousedown="bringToFront(this)">
+                <div class="window-titlebar bg-[#000080] text-white flex justify-between items-center px-1.5 py-1 cursor-default select-none">
+                  <span class="font-pixel text-[8px] tracking-widest">C:\DEVLOGS</span>
+                  <button class="close-btn bg-[#c0c0c0] text-black border-t-2 border-l-2 border-white border-b-2 border-r-2 border-gray-600 w-4 h-4 flex items-center justify-center font-bold text-[10px] leading-none active:border-t-gray-600 active:border-l-gray-600 active:border-b-white active:border-r-white" onclick="closeWindow('window-devlogs')">x</button>
+                </div>
+                <div class="window-content flex-grow p-4 flex flex-col gap-2 overflow-y-auto os-scroll font-sans text-black bg-white border-[3px] border-t-gray-600 border-l-gray-600 border-b-white border-r-white m-1">
+                  <p class="text-[12px] text-gray-500 mb-2 font-mono">0 items found. Archives are coming soon...</p>
+                </div>
+              </div>
+
+              <!-- Labs Folder Window -->
+              <div id="window-labs" class="os-window hidden absolute top-10 left-20 w-[75%] h-[65%] bg-[#c0c0c0] border-[3px] border-gray-200 shadow-[2px_2px_10px_rgba(0,0,0,0.5)] pointer-events-auto flex flex-col" onmousedown="bringToFront(this)">
+                <div class="window-titlebar bg-[#000080] text-white flex justify-between items-center px-1.5 py-1 cursor-default select-none">
+                  <span class="font-pixel text-[8px] tracking-widest">C:\LABS</span>
+                  <button class="close-btn bg-[#c0c0c0] text-black border-t-2 border-l-2 border-white border-b-2 border-r-2 border-gray-600 w-4 h-4 flex items-center justify-center font-bold text-[10px] leading-none active:border-t-gray-600 active:border-l-gray-600 active:border-b-white active:border-r-white" onclick="closeWindow('window-labs')">x</button>
+                </div>
+                <div class="window-content flex-grow p-4 flex gap-6 flex-wrap content-start overflow-y-auto os-scroll font-sans text-black bg-white border-[3px] border-t-gray-600 border-l-gray-600 border-b-white border-r-white m-1">
+                  <div class="text-center w-16 cursor-pointer hover:bg-blue-600 hover:text-white p-1 select-none group" onclick="window.open('/labs#password-checker', '_blank')">
+                    <div class="w-10 h-10 mx-auto bg-blue-200 border border-gray-400 flex items-center justify-center text-lg">🔑</div>
+                    <div class="text-[10px] mt-1 group-hover:bg-blue-800">Pass.exe</div>
+                  </div>
+                  <div class="text-center w-16 cursor-pointer hover:bg-blue-600 hover:text-white p-1 select-none group" onclick="window.open('/labs#pathfinding', '_blank')">
+                    <div class="w-10 h-10 mx-auto bg-blue-200 border border-gray-400 flex items-center justify-center text-lg">🗺️</div>
+                    <div class="text-[10px] mt-1 group-hover:bg-blue-800">Path.exe</div>
+                  </div>
+                  <div class="text-center w-16 cursor-pointer hover:bg-blue-600 hover:text-white p-1 select-none group" onclick="window.open('/labs#base64-hex', '_blank')">
+                    <div class="w-10 h-10 mx-auto bg-blue-200 border border-gray-400 flex items-center justify-center text-lg">🔄</div>
+                    <div class="text-[10px] mt-1 group-hover:bg-blue-800">Base64.exe</div>
+                  </div>
+                  <div class="text-center w-16 cursor-pointer hover:bg-blue-600 hover:text-white p-1 select-none group" onclick="window.open('/labs#color-palette', '_blank')">
+                    <div class="w-10 h-10 mx-auto bg-blue-200 border border-gray-400 flex items-center justify-center text-lg">🎨</div>
+                    <div class="text-[10px] mt-1 group-hover:bg-blue-800">Color.exe</div>
+                  </div>
+                  <div class="text-center w-16 cursor-pointer hover:bg-blue-600 hover:text-white p-1 select-none group" onclick="window.open('/labs#regex-tester', '_blank')">
+                    <div class="w-10 h-10 mx-auto bg-blue-200 border border-gray-400 flex items-center justify-center text-lg">🔍</div>
+                    <div class="text-[10px] mt-1 group-hover:bg-blue-800">Regex.exe</div>
+                  </div>
+                  <div class="text-center w-16 cursor-pointer hover:bg-blue-600 hover:text-white p-1 select-none group" onclick="window.open('/labs#json-validator', '_blank')">
+                    <div class="w-10 h-10 mx-auto bg-blue-200 border border-gray-400 flex items-center justify-center text-lg font-bold">{ }</div>
+                    <div class="text-[10px] mt-1 group-hover:bg-blue-800">Json.exe</div>
+                  </div>
+                  <div class="text-center w-16 cursor-pointer hover:bg-blue-600 hover:text-white p-1 select-none group" onclick="window.open('/labs#ascii-art', '_blank')">
+                    <div class="w-10 h-10 mx-auto bg-blue-200 border border-gray-400 flex items-center justify-center text-lg">👾</div>
+                    <div class="text-[10px] mt-1 group-hover:bg-blue-800">Ascii.exe</div>
+                  </div>
+                  <div class="text-center w-16 cursor-pointer hover:bg-blue-600 hover:text-white p-1 select-none group" onclick="window.open('/labs#hash-gen', '_blank')">
+                    <div class="w-10 h-10 mx-auto bg-blue-200 border border-gray-400 flex items-center justify-center text-lg font-bold">#</div>
+                    <div class="text-[10px] mt-1 group-hover:bg-blue-800">Hash.exe</div>
+                  </div>
+                  <div class="text-center w-16 cursor-pointer hover:bg-blue-600 hover:text-white p-1 select-none group" onclick="window.open('/labs#css-gradient', '_blank')">
+                    <div class="w-10 h-10 mx-auto bg-blue-200 border border-gray-400 flex items-center justify-center text-lg">🌈</div>
+                    <div class="text-[10px] mt-1 group-hover:bg-blue-800">CssGrad.exe</div>
+                  </div>
+                  <div class="text-center w-16 cursor-pointer hover:bg-blue-600 hover:text-white p-1 select-none group" onclick="window.open('/labs#unix-converter', '_blank')">
+                    <div class="w-10 h-10 mx-auto bg-blue-200 border border-gray-400 flex items-center justify-center text-lg">⏱️</div>
+                    <div class="text-[10px] mt-1 group-hover:bg-blue-800">Unix.exe</div>
+                  </div>
+                </div>
+              </div>
+
+                <div id="window-game-runner" class="os-window hidden absolute top-1 left-1 right-1 bottom-1 bg-[#c0c0c0] border-[3px] border-gray-200 shadow-[2px_2px_10px_rgba(0,0,0,0.5)] pointer-events-auto flex flex-col" onmousedown="bringToFront(this)">
+                <div class="window-titlebar bg-[#000080] text-white flex justify-between items-center px-1.5 py-1 cursor-default select-none">
+                  <span class="font-pixel text-[8px] tracking-widest" id="game-title">Game Runner</span>
+                  <button class="close-btn bg-[#c0c0c0] text-black border-t-2 border-l-2 border-white border-b-2 border-r-2 border-gray-600 w-4 h-4 flex items-center justify-center font-bold text-[10px] leading-none active:border-t-gray-600 active:border-l-gray-600 active:border-b-white active:border-r-white" onclick="closeGame()">x</button>
+                </div>
+                <div class="window-content flex-grow relative overflow-hidden bg-black flex items-stretch justify-center border-[3px] border-t-gray-600 border-l-gray-600 border-b-white border-r-white m-1">
+                  <!-- Game instances are pre-rendered but hidden, we show the active one -->
+                  <div id="game-instance-snake" class="game-instance hidden w-full h-full overflow-hidden" style="zoom: 0.8;" tabindex="-1"><Snake /></div>
+                  <div id="game-instance-tetris" class="game-instance hidden w-full h-full overflow-hidden" style="zoom: 0.7;" tabindex="-1"><Tetris /></div>
+                  <div id="game-instance-dino" class="game-instance hidden w-full h-full overflow-hidden" style="zoom: 1;" tabindex="-1"><ChromeDino /></div>
+                  <div id="game-instance-2048" class="game-instance hidden w-full h-full overflow-hidden" style="zoom: 0.65;" tabindex="-1"><Game2048 /></div>
+                  <div id="game-instance-flappy" class="game-instance hidden w-full h-full overflow-hidden" style="zoom: 0.7;" tabindex="-1"><FlappyBird /></div>
+                  <div id="game-instance-memory" class="game-instance hidden w-full h-full overflow-hidden" style="zoom: 0.6;" tabindex="-1"><MemoryMatch /></div>
+                  <div id="game-instance-tictactoe" class="game-instance hidden w-full h-full overflow-hidden" style="zoom: 0.7;" tabindex="-1"><TicTacToe /></div>
+                  <div id="game-instance-wordle" class="game-instance hidden w-full h-full overflow-hidden" style="zoom: 0.65;" tabindex="-1"><Wordle /></div>
+                  <div id="game-instance-connect4" class="game-instance hidden w-full h-full overflow-hidden" style="zoom: 0.6;" tabindex="-1"><Connect4 /></div>
+                  <div id="game-instance-dontwordle" class="game-instance hidden w-full h-full overflow-hidden" style="zoom: 0.6;" tabindex="-1"><DontWordle /></div>
+                  <div id="game-instance-colorguesser" class="game-instance hidden w-full h-full overflow-hidden" style="zoom: 0.65;" tabindex="-1"><ColorGuesser /></div>
+                  <div id="game-instance-gravitymaze" class="game-instance hidden w-full h-full overflow-hidden" style="zoom: 0.7;" tabindex="-1"><GravityMaze /></div>
+                </div>
+              </div>
+
+            </div>
+
+            <!-- Taskbar -->
+            <div id="taskbar" class="absolute bottom-0 w-full h-[28px] bg-[#c0c0c0] border-t-2 border-white flex items-center px-1 z-40 justify-between select-none shadow-[0_-1px_2px_rgba(0,0,0,0.2)]">
+              <div class="flex gap-1 items-center h-full py-0.5">
+                <button class="bg-[#c0c0c0] h-full border-t-2 border-l-2 border-white border-b-2 border-r-2 border-gray-600 px-2 flex items-center justify-center gap-1 active:border-t-gray-600 active:border-l-gray-600 active:border-b-white active:border-r-white font-pixel text-[8px] text-black font-bold" onclick="alert('Start menu clicked!')">
+                  <span class="text-blue-700 text-[10px] leading-none">C</span> Start
+                </button>
+                <div class="w-px h-full bg-gray-400 mx-1 border-r border-white"></div>
+                <div id="taskbar-windows" class="flex gap-1 h-full">
+                  <!-- Active window buttons will appear here -->
+                </div>
+              </div>
+              
+              <div class="bg-[#c0c0c0] h-[80%] border-t-2 border-l-2 border-gray-600 border-b-2 border-r-2 border-white px-2 flex items-center font-pixel text-[8px] text-black" id="taskbar-clock">
+                12:00 PM
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Monitor Power Button & LED -->
+        <div class="absolute bottom-1 right-2 md:bottom-3 md:right-8 flex items-center gap-1.5 md:gap-3">
+          <div class="w-1.5 h-1.5 md:w-2.5 md:h-2.5 rounded-none bg-green shadow-[0_0_12px_var(--green)]"></div>
+          <div class="text-[6px] md:text-[9px] text-gray-500 font-sans font-bold tracking-widest uppercase">Power</div>
+        </div>
+      </div>
+
+      <!-- Peripherals (Keyboard & Mouse) -->
+      <div class="flex items-end justify-center gap-4 md:gap-8 w-full px-2 z-0" style="transform: rotateX(20deg) translateY(-10px);">
+        <!-- Keyboard -->
+        <div class="css-keyboard relative bg-[#d8d8d8] rounded-sm p-2 md:p-3 w-[65%] md:w-[50%] aspect-[3/1] flex flex-col gap-1 shadow-[0_20px_40px_rgba(0,0,0,0.6)]">
+          <!-- Keyboard Cable -->
+          <div class="absolute -top-6 left-1/2 w-1.5 h-12 bg-[#222] rounded-none shadow-[2px_0_4px_rgba(0,0,0,0.5)] z-[-1]" style="transform: translateX(-50%);"></div>
+          
+          <div class="flex-1 flex gap-1">
+            <div class="h-full flex-grow bg-[#c0c0c0] rounded-sm shadow-[inset_1px_1px_2px_#fff,inset_-1px_-2px_4px_rgba(0,0,0,0.2),0_2px_2px_rgba(0,0,0,0.3)]"></div>
+            <div class="h-full flex-grow bg-[#c0c0c0] rounded-sm shadow-[inset_1px_1px_2px_#fff,inset_-1px_-2px_4px_rgba(0,0,0,0.2),0_2px_2px_rgba(0,0,0,0.3)]"></div>
+            <div class="h-full flex-grow bg-[#c0c0c0] rounded-sm shadow-[inset_1px_1px_2px_#fff,inset_-1px_-2px_4px_rgba(0,0,0,0.2),0_2px_2px_rgba(0,0,0,0.3)]"></div>
+            <div class="h-full flex-grow bg-[#c0c0c0] rounded-sm shadow-[inset_1px_1px_2px_#fff,inset_-1px_-2px_4px_rgba(0,0,0,0.2),0_2px_2px_rgba(0,0,0,0.3)]"></div>
+            <div class="h-full flex-grow bg-[#c0c0c0] rounded-sm shadow-[inset_1px_1px_2px_#fff,inset_-1px_-2px_4px_rgba(0,0,0,0.2),0_2px_2px_rgba(0,0,0,0.3)]"></div>
+            <div class="h-full flex-grow bg-[#c0c0c0] rounded-sm shadow-[inset_1px_1px_2px_#fff,inset_-1px_-2px_4px_rgba(0,0,0,0.2),0_2px_2px_rgba(0,0,0,0.3)]"></div>
+            <div class="h-full flex-grow bg-[#c0c0c0] rounded-sm shadow-[inset_1px_1px_2px_#fff,inset_-1px_-2px_4px_rgba(0,0,0,0.2),0_2px_2px_rgba(0,0,0,0.3)]"></div>
+          </div>
+          <div class="flex-1 flex gap-1">
+            <div class="h-full w-8 bg-[#c0c0c0] rounded-sm shadow-[inset_1px_1px_2px_#fff,inset_-1px_-2px_4px_rgba(0,0,0,0.2),0_2px_2px_rgba(0,0,0,0.3)]"></div>
+            <div class="h-full flex-grow bg-[#c0c0c0] rounded-sm shadow-[inset_1px_1px_2px_#fff,inset_-1px_-2px_4px_rgba(0,0,0,0.2),0_2px_2px_rgba(0,0,0,0.3)]"></div>
+            <div class="h-full flex-grow bg-[#c0c0c0] rounded-sm shadow-[inset_1px_1px_2px_#fff,inset_-1px_-2px_4px_rgba(0,0,0,0.2),0_2px_2px_rgba(0,0,0,0.3)]"></div>
+            <div class="h-full flex-grow bg-[#c0c0c0] rounded-sm shadow-[inset_1px_1px_2px_#fff,inset_-1px_-2px_4px_rgba(0,0,0,0.2),0_2px_2px_rgba(0,0,0,0.3)]"></div>
+            <div class="h-full flex-grow bg-[#c0c0c0] rounded-sm shadow-[inset_1px_1px_2px_#fff,inset_-1px_-2px_4px_rgba(0,0,0,0.2),0_2px_2px_rgba(0,0,0,0.3)]"></div>
+            <div class="h-full w-12 bg-[#c0c0c0] rounded-sm shadow-[inset_1px_1px_2px_#fff,inset_-1px_-2px_4px_rgba(0,0,0,0.2),0_2px_2px_rgba(0,0,0,0.3)]"></div>
+          </div>
+          <div class="flex-1 flex gap-1">
+             <div class="h-full w-12 bg-[#c0c0c0] rounded-sm shadow-[inset_1px_1px_2px_#fff,inset_-1px_-2px_4px_rgba(0,0,0,0.2),0_2px_2px_rgba(0,0,0,0.3)]"></div>
+             <div class="h-full flex-grow bg-[#c0c0c0] rounded-sm shadow-[inset_1px_1px_2px_#fff,inset_-1px_-2px_4px_rgba(0,0,0,0.2),0_2px_2px_rgba(0,0,0,0.3)]"></div>
+             <div class="h-full flex-grow bg-[#c0c0c0] rounded-sm shadow-[inset_1px_1px_2px_#fff,inset_-1px_-2px_4px_rgba(0,0,0,0.2),0_2px_2px_rgba(0,0,0,0.3)]"></div>
+             <div class="h-full flex-grow bg-[#c0c0c0] rounded-sm shadow-[inset_1px_1px_2px_#fff,inset_-1px_-2px_4px_rgba(0,0,0,0.2),0_2px_2px_rgba(0,0,0,0.3)]"></div>
+             <div class="h-full w-16 bg-[#c0c0c0] rounded-sm shadow-[inset_1px_1px_2px_#fff,inset_-1px_-2px_4px_rgba(0,0,0,0.2),0_2px_2px_rgba(0,0,0,0.3)]"></div>
+          </div>
+          <div class="flex-1 flex gap-1 justify-center">
+             <div class="h-full w-1/2 bg-[#c0c0c0] rounded-sm shadow-[inset_1px_1px_2px_#fff,inset_-1px_-2px_4px_rgba(0,0,0,0.2),0_2px_2px_rgba(0,0,0,0.3)]"></div>
+          </div>
+        </div>
+
+        <!-- Mouse -->
+        <div class="css-mouse relative bg-[#d8d8d8] rounded-sm w-[15%] md:w-[12%] aspect-[2/3] shadow-[0_20px_40px_rgba(0,0,0,0.6)] flex justify-center p-2">
+          <!-- Mouse Cable -->
+          <div class="absolute -top-8 left-1/2 w-1.5 h-16 bg-[#222] rounded-none shadow-[2px_0_4px_rgba(0,0,0,0.5)] z-[-1]" style="transform: translateX(-50%) rotate(15deg); transform-origin: bottom center;"></div>
+          
+          <div class="w-full h-1/2 flex gap-1">
+             <div class="h-full flex-grow bg-[#c8c8c8] rounded-sm shadow-[inset_1px_1px_2px_#fff,inset_-1px_-1px_3px_rgba(0,0,0,0.1),0_1px_2px_rgba(0,0,0,0.2)]"></div>
+             <div class="h-full flex-grow bg-[#c8c8c8] rounded-sm shadow-[inset_1px_1px_2px_#fff,inset_-1px_-1px_3px_rgba(0,0,0,0.1),0_1px_2px_rgba(0,0,0,0.2)]"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <style>
+      /* Retro Monitor Details */
+      .monitor-frame {
+        border-bottom: 16px solid #b0b0b0;
+        border-right: 8px solid #c0c0c0;
+        border-left: 2px solid #fff;
+        border-top: 2px solid #fff;
+      }
+      .inner-bezel {
+        border-bottom: 8px solid #111;
+        border-right: 4px solid #1a1a1a;
+        border-top: 4px solid #555;
+        border-left: 4px solid #444;
+      }
+      
+      /* Keyboard & Mouse Details */
+      .css-keyboard {
+        border-bottom: 12px solid #b0b0b0;
+        border-right: 6px solid #c0c0c0;
+        border-top: 2px solid #fff;
+        border-left: 2px solid #fff;
+      }
+      .css-mouse {
+        border-bottom: 8px solid #b0b0b0;
+        border-right: 6px solid #c0c0c0;
+        border-left: 2px solid #fff;
+        border-top: 2px solid #fff;
+      }
+      
+      /* Subtle scanlines specifically for the crt screen */
+      .crt-screen::after {
+        content: " ";
+        display: block;
+        position: absolute;
+        top: 0;
+        left: 0;
+        bottom: 0;
+        right: 0;
+        background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.05) 50%);
+        z-index: 9999;
+        background-size: 100% 2px, 3px 100%;
+        pointer-events: none;
+      }
+
+      /* Custom scrollbar */
+      .os-scroll {
+        scrollbar-width: auto;
+        scrollbar-color: #c0c0c0 #ffffff;
+      }
+      .os-scroll::-webkit-scrollbar {
+        width: 16px;
+      }
+      .os-scroll::-webkit-scrollbar-track {
+        background: url('data:image/svg+xml;utf8,<svg width="2" height="2" viewBox="0 0 2 2" xmlns="http://www.w3.org/2000/svg"><rect width="1" height="1" fill="%23dfdfdf"/><rect x="1" y="1" width="1" height="1" fill="%23dfdfdf"/><rect x="1" width="1" height="1" fill="%23ffffff"/><rect y="1" width="1" height="1" fill="%23ffffff"/></svg>') repeat;
+        border-left: 1px solid #dfdfdf;
+      }
+      .os-scroll::-webkit-scrollbar-thumb {
+        background: #c0c0c0;
+        border-top: 1px solid #ffffff;
+        border-left: 1px solid #ffffff;
+        border-right: 1px solid #808080;
+        border-bottom: 1px solid #808080;
+        border-radius: 0;
+        box-shadow: inset 1px 1px 0px 0px #dfdfdf, inset -1px -1px 0px 0px #0a0a0a;
+      }
+      .os-scroll::-webkit-scrollbar-thumb:hover {
+        background: #d0d0d0;
+      }
+      .os-scroll::-webkit-scrollbar-button {
+        display: none;
+      }
+
+      /* Hide all scrollbars inside game instances */
+      .game-instance,
+      .game-instance *,
+      #window-game-runner .window-content,
+      #window-game-runner .window-content * {
+        scrollbar-width: none !important;
+      }
+      .game-instance::-webkit-scrollbar,
+      .game-instance *::-webkit-scrollbar,
+      #window-game-runner .window-content::-webkit-scrollbar,
+      #window-game-runner .window-content *::-webkit-scrollbar {
+        display: none !important;
+        width: 0 !important;
+        height: 0 !important;
+      }
+
+      /* No focus outline on game containers */
+      .game-instance:focus {
+        outline: none;
+      }
+
+      /* Flappy bird fix: no light blue background bleed */
+      #game-instance-flappy > * {
+        background: #000 !important;
+      }
+
+      /* Desktop icon hover effect */
+      .desktop-icon:hover span {
+        background: #000080;
+        color: white;
+      }
+    </style>
+
+    <script define:vars={{ projects }}>
+      // 1. Clock Logic
+      function updateClock() {
+        const now = new Date();
+        let hours = now.getHours();
+        const minutes = now.getMinutes().toString().padStart(2, '0');
+        const ampm = hours >= 12 ? 'PM' : 'AM';
+        hours = hours % 12;
+        hours = hours ? hours : 12;
+        const clockEl = document.getElementById('taskbar-clock');
+        if (clockEl) clockEl.textContent = `${hours}:${minutes} ${ampm}`;
+      }
+      setInterval(updateClock, 1000);
+      updateClock();
+
+      // 2. Window Management
+      let zIndexCounter = 100;
+      
+      // Keep track of active windows
+      const activeWindows = new Set();
+      
+      function updateTaskbar() {
+        const container = document.getElementById('taskbar-windows');
+        if (!container) return;
+        
+        container.innerHTML = '';
+        activeWindows.forEach(winId => {
+          const winEl = document.getElementById(winId);
+          if (winEl && !winEl.classList.contains('hidden')) {
+            const title = winEl.querySelector('.window-titlebar span').textContent;
+            
+            const btn = document.createElement('button');
+            btn.className = "bg-[#c0c0c0] h-full border-t-2 border-l-2 border-white border-b-2 border-r-2 border-gray-600 px-2 flex items-center justify-center font-pixel text-[6px] text-black w-24 truncate active:border-t-gray-600 active:border-l-gray-600 active:border-b-white active:border-r-white";
+            // Check if it's the topmost window
+            if (winEl.style.zIndex == zIndexCounter) {
+              btn.classList.add('bg-gray-300', 'border-t-gray-600', 'border-l-gray-600', 'border-b-white', 'border-r-white');
+            }
+            btn.textContent = title;
+            btn.onclick = () => {
+              if (winEl.style.zIndex == zIndexCounter) {
+                // If it's on top, minimize it
+                winEl.classList.add('hidden');
+              } else {
+                winEl.classList.remove('hidden');
+                bringToFront(winEl);
+              }
+              updateTaskbar();
+            };
+            container.appendChild(btn);
+          }
+        });
+      }
+
+      window.openWindow = function(windowId) {
+        const win = document.getElementById(windowId);
+        if (win) {
+          win.classList.remove('hidden');
+          bringToFront(win);
+          activeWindows.add(windowId);
+          updateTaskbar();
+        }
+      }
+      window.closeWindow = function(windowId) {
+        const win = document.getElementById(windowId);
+        if (win) {
+          win.classList.add('hidden');
+          activeWindows.delete(windowId);
+          updateTaskbar();
+        }
+      }
+      window.bringToFront = function(winEl) {
+        zIndexCounter++;
+        winEl.style.zIndex = zIndexCounter;
+        updateTaskbar();
+      }
+
+      // Make windows draggable
+      const windows = document.querySelectorAll('.os-window');
+      windows.forEach(win => {
+        const titlebar = win.querySelector('.window-titlebar');
+        let isDragging = false;
+        let offsetX = 0;
+        let offsetY = 0;
+
+        titlebar.addEventListener('mousedown', (e) => {
+          if (e.target.closest('.close-btn')) return;
+          isDragging = true;
+          bringToFront(win);
+          
+          const rect = win.getBoundingClientRect();
+          const parentRect = win.parentElement.getBoundingClientRect();
+          
+          // These coordinates are relative to the screen, which works well enough
+          // even with transforms if we calculate carefully.
+          offsetX = e.clientX - rect.left;
+          offsetY = e.clientY - rect.top;
+        });
+
+        document.addEventListener('mousemove', (e) => {
+          if (!isDragging) return;
+          
+          const parentRect = win.parentElement.getBoundingClientRect();
+          
+          // Calculate scale to adjust drag speed for 3D transform
+          const scale = parentRect.width / win.parentElement.offsetWidth;
+          
+          let newLeft = (e.clientX - parentRect.left - offsetX) / scale;
+          let newTop = (e.clientY - parentRect.top - offsetY) / scale;
+          
+          win.style.left = `${newLeft}px`;
+          win.style.top = `${newTop}px`;
+        });
+
+        document.addEventListener('mouseup', () => {
+          isDragging = false;
+        });
+      });
+
+      // 3. Game Launching Logic
+      window.launchGame = function(gameId) {
+        const runner = document.getElementById('window-game-runner');
+        const title = document.getElementById('game-title');
+        
+        // Hide all instances
+        document.querySelectorAll('.game-instance').forEach(inst => inst.classList.add('hidden'));
+        
+        // Show selected
+        const selected = document.getElementById(`game-instance-${gameId}`);
+        if (selected) {
+          selected.classList.remove('hidden');
+          title.textContent = `${gameId.toUpperCase()}.EXE`;
+          openWindow('window-game-runner');
+          // Focus the game container so keyboard events reach it
+          setTimeout(() => {
+            // For Dino, focus the iframe directly
+            if (gameId === 'dino') {
+              const iframe = selected.querySelector('iframe');
+              if (iframe) {
+                iframe.removeAttribute('tabindex');
+                iframe.contentWindow?.focus();
+              }
+            } else {
+              // Focus the game container so document keydown events work
+              selected.setAttribute('tabindex', '0');
+              selected.focus({ preventScroll: true });
+            }
+          }, 100);
+        }
+      }
+      window.closeGame = function() {
+        closeWindow('window-game-runner');
+        document.querySelectorAll('.game-instance').forEach(inst => inst.classList.add('hidden'));
+      }
+
+      // 4. Terminal Logic
+      const input = document.getElementById("cmd-input");
+      const output = document.getElementById("terminal-output");
+      const container = document.getElementById("terminal-container");
+      const promptPrefix = document.getElementById("prompt-prefix");
+
+      let currentDir = "~";
+      let currentUser = "guest";
+      const validRoutes = ["about", "projects", "devlog", "guestbook", "contact", "labs", "games"];
+
+      const staticCommands = {
+        help: "Available commands:<br/>  help     - Show this message<br/>  about    - About the creator<br/>  ls       - List directory contents<br/>  pwd      - Print working directory<br/>  whoami   - Print current user<br/>  date     - Print current date and time<br/>  echo     - Echo text back<br/>  cat      - Print file contents<br/>  clear    - Clear the terminal screen<br/>  cd       - Navigate (e.g. cd about, cd ..)",
+        about: "Hi, I'm Aneesh.<br/>I build things for the web. I like cats, dogs, and pixel art.",
+      };
+
+      function updatePrompt() {
+        if (promptPrefix) {
+           promptPrefix.textContent = `C:\\>`;
+        }
+      }
+
+      function printLine(text, isCommand = false) {
+        if (!output) return;
+        const line = document.createElement("div");
+        line.className = "mb-2";
+        if (isCommand) {
+          line.innerHTML = `<span class="text-green mr-3 font-bold">C:\\></span><span class="text-text-primary uppercase">${text}</span>`;
+        } else {
+          line.innerHTML = `<span class="text-text-primary leading-loose tracking-wider whitespace-pre-wrap">${text}</span>`;
+        }
+        output.appendChild(line);
+        if (container) {
+          container.scrollTop = container.scrollHeight;
+        }
+      }
+
+      input?.addEventListener("keydown", (e) => {
+        if (e.key === "Enter") {
+          const rawVal = input.value.trim();
+          const val = rawVal.toLowerCase();
+          const parts = val.split(/\s+/);
+          const cmd = parts[0];
+          const args = parts.slice(1);
+          
+          input.value = "";
+          if (!val) return;
+          
+          printLine(rawVal, true);
+
+          if (cmd === "clear") {
+            if (output) output.innerHTML = "";
+            return;
+          }
+
+          if (cmd === "ls" || cmd === "dir") {
+             let out = "<div class='flex flex-wrap gap-x-4 gap-y-2 text-blue font-bold'>";
+             out += "<div>GAMES/</div><div>DEVLOGS/</div><div>LABS/</div>";
+             out += "<div class='text-text-primary font-normal'>readme.txt</div>";
+             out += "</div>";
+             printLine(out);
+             return;
+          }
+
+          if (cmd === "echo") {
+             printLine(rawVal.substring(5));
+             return;
+          }
+          
+          if (cmd === "cat" || cmd === "type") {
+             const file = args[0];
+             if (!file) {
+                 printLine("missing file operand");
+             } else if (file === "readme.txt") {
+                 printLine("Welcome to Chimera OS!\nThis system is built for those who appreciate retro interfaces.\nExplore the folders to see my projects and experiments.\nYou can run classic games in the GAMES folder, or use the Terminal to navigate the site. Have fun!\n\n- Aneesh");
+             } else {
+                 printLine(`File not found: ${file}`);
+             }
+             return;
+          }
+
+          if (cmd === "cd") {
+            const dir = args[0] || "~";
+            if (dir === "..") {
+               printLine("");
+               return;
+            }
+            if (dir.toLowerCase() === "games") {
+               openWindow('window-games');
+               return;
+            }
+            if (dir.toLowerCase() === "devlogs") {
+               openWindow('window-devlogs');
+               return;
+            }
+            if (dir.toLowerCase() === "labs") {
+               openWindow('window-labs');
+               return;
+            }
+            
+            printLine(`Path not found: ${dir}`);
+            return;
+          }
+
+          if (staticCommands[cmd]) {
+            printLine(staticCommands[cmd]);
+          } else {
+            printLine(`Bad command or file name`);
+          }
+        }
+      });
+      
+      // Load color theme from localStorage if it exists, otherwise default to mocha
+      const theme = localStorage.getItem("theme") || "mocha";
+      document.documentElement.setAttribute("data-theme", theme);
+      
+      updatePrompt();
+    </script>
+  </body>
+</html>

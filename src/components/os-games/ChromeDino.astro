@@ -1,0 +1,166 @@
+---
+---
+
+<div
+  id="dino-wrapper"
+  class="w-full h-full flex flex-col items-stretch select-none overflow-hidden touch-action-none"
+  style="touch-action: none;"
+>
+  <!-- The iframe fills the entire game card area (minus the mode selector) -->
+  <iframe
+    id="dino-iframe"
+    src="/games/chrome-dino/dino-embed.html?type=0"
+    style="flex:1; width:100%; border:none; display:block; min-height:0;"
+    scrolling="no"
+    title="Chrome Dino"
+    allow="autoplay"
+  ></iframe>
+
+  <!-- Mode selector bar -->
+  <div
+    class="flex items-center justify-center py-2 flex-shrink-0"
+    style="height:44px; background: #0a0a0a; border-top: 1px solid #222;"
+  >
+    <div class="relative inline-block text-left" id="dino-custom-select">
+      <button
+        type="button"
+        id="dino-mode-btn"
+        class="flex items-center justify-between gap-2 px-3 py-1.5 rounded-none bg-black border border-[#333] text-[#00ff41] font-mono text-xs uppercase tracking-wider shadow focus:outline-none cursor-pointer transition-colors hover:border-[#00ff41]"
+        aria-expanded="false"
+        aria-haspopup="true"
+      >
+        <span id="dino-mode-label">🦖&nbsp; Classic</span>
+        <svg class="-mr-1 ml-1 h-3 w-3" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+          <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
+        </svg>
+      </button>
+
+      <div
+        id="dino-mode-menu"
+        class="hidden origin-bottom absolute bottom-full mb-2 left-1/2 -translate-x-1/2 w-44 rounded-none shadow-2xl bg-black ring-1 ring-[#333] focus:outline-none z-50 overflow-hidden border border-[#333]"
+        role="menu"
+        aria-orientation="vertical"
+        aria-labelledby="dino-mode-btn"
+        tabindex="-1"
+      >
+        <div class="py-1" role="none">
+          <button type="button" class="dino-option text-[#888] block w-full text-left px-4 py-2 text-xs font-mono uppercase hover:bg-[#111] hover:text-[#00ff41] transition-colors" role="menuitem" tabindex="-1" data-value="0">🦖&nbsp; Classic</button>
+          <button type="button" class="dino-option text-[#888] block w-full text-left px-4 py-2 text-xs font-mono uppercase hover:bg-[#111] hover:text-[#00ff41] transition-colors" role="menuitem" tabindex="-1" data-value="1">🏃&nbsp; Hurdling</button>
+          <button type="button" class="dino-option text-[#888] block w-full text-left px-4 py-2 text-xs font-mono uppercase hover:bg-[#111] hover:text-[#00ff41] transition-colors" role="menuitem" tabindex="-1" data-value="2">🤸&nbsp; Gymnastics</button>
+          <button type="button" class="dino-option text-[#888] block w-full text-left px-4 py-2 text-xs font-mono uppercase hover:bg-[#111] hover:text-[#00ff41] transition-colors" role="menuitem" tabindex="-1" data-value="3">🏄&nbsp; Surfing</button>
+          <button type="button" class="dino-option text-[#888] block w-full text-left px-4 py-2 text-xs font-mono uppercase hover:bg-[#111] hover:text-[#00ff41] transition-colors" role="menuitem" tabindex="-1" data-value="4">🏊&nbsp; Swimming</button>
+          <button type="button" class="dino-option text-[#888] block w-full text-left px-4 py-2 text-xs font-mono uppercase hover:bg-[#111] hover:text-[#00ff41] transition-colors" role="menuitem" tabindex="-1" data-value="5">🏇&nbsp; Equestrian</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+(function () {
+  const iframe     = document.getElementById('dino-iframe')  as HTMLIFrameElement;
+  /* ── Custom Mode Selector ────────────────────────────────────────────── */
+  const customSelect = document.getElementById('dino-custom-select');
+  const modeBtn      = document.getElementById('dino-mode-btn');
+  const modeLabel    = document.getElementById('dino-mode-label');
+  const modeMenu     = document.getElementById('dino-mode-menu');
+  const options      = document.querySelectorAll('.dino-option');
+
+  if (modeBtn && modeMenu) {
+    // Toggle menu
+    modeBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const isExpanded = modeBtn.getAttribute('aria-expanded') === 'true';
+      modeBtn.setAttribute('aria-expanded', (!isExpanded).toString());
+      modeMenu.classList.toggle('hidden');
+    });
+
+    // Close when clicking outside
+    document.addEventListener('click', (e) => {
+      if (!customSelect?.contains(e.target as Node)) {
+        modeBtn.setAttribute('aria-expanded', 'false');
+        modeMenu.classList.add('hidden');
+      }
+    });
+
+
+    // Handle option selection
+    options.forEach(opt => {
+      opt.addEventListener('click', () => {
+        const value = opt.getAttribute('data-value');
+        const text = opt.innerHTML;
+
+        // Update button label
+        if (modeLabel) modeLabel.innerHTML = text;
+
+        // Close menu
+        modeBtn.setAttribute('aria-expanded', 'false');
+        modeMenu.classList.add('hidden');
+
+        // Reload iframe
+        if (iframe && value) {
+          iframe.src = `/games/chrome-dino/dino-embed.html?type=${value}`;
+          iframe.onload = () => iframe.focus();
+        }
+      });
+    });
+  }
+
+
+
+  /* ── Focus iframe when wrapper is clicked ───────────────────────────── */
+  const wrapper = document.getElementById('dino-wrapper');
+  if (wrapper) {
+    wrapper.addEventListener('pointerdown', (e) => {
+      if ((e.target as Element).closest('#dino-custom-select')) return;
+      // Focus iframe so it receives real keyboard events
+      iframe.focus();
+      // Also send a space keydown in case the game needs it to start
+      iframe.contentWindow?.postMessage(
+        { type: 'KEY', eventType: 'keydown', keyCode: 32 },
+        '*'
+      );
+      setTimeout(() => {
+        iframe.contentWindow?.postMessage(
+          { type: 'KEY', eventType: 'keyup', keyCode: 32 },
+          '*'
+        );
+      }, 150);
+    });
+  }
+
+  /* ── Forward keyboard events to iframe when dino instance is visible ── */
+  const dinoInstance = document.getElementById('game-instance-dino');
+  window.addEventListener('keydown', (e) => {
+    if (dinoInstance && !dinoInstance.classList.contains('hidden')) {
+      if (e.code === 'Space' || e.code === 'ArrowUp' || e.code === 'ArrowDown') {
+        e.preventDefault();
+        iframe.contentWindow?.postMessage(
+          { type: 'KEY', eventType: 'keydown', keyCode: e.keyCode },
+          '*'
+        );
+      }
+    }
+  });
+
+  window.addEventListener('keyup', (e) => {
+    if (dinoInstance && !dinoInstance.classList.contains('hidden')) {
+      if (e.code === 'Space' || e.code === 'ArrowUp' || e.code === 'ArrowDown') {
+        e.preventDefault();
+        iframe.contentWindow?.postMessage(
+          { type: 'KEY', eventType: 'keyup', keyCode: e.keyCode },
+          '*'
+        );
+      }
+    }
+  });
+
+  /* ── Focus iframe on load ─────────────────────────────────────────────── */
+  iframe.addEventListener('load', () => {
+    // Only auto-focus if the dino game is currently active
+    if (dinoInstance && !dinoInstance.classList.contains('hidden')) {
+      iframe.focus();
+    }
+  });
+})();
+</script>

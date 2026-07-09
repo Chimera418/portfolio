@@ -1,0 +1,222 @@
+---
+// TicTacToe.astro
+---
+<div class="w-full h-full flex flex-col items-center justify-center bg-black p-4 relative" id="ttt-container">
+  <button id="ttt-restart-btn" class="absolute top-4 right-4 p-2 bg-black hover:bg-[#222] rounded-none border border-[#333] transition-colors z-30 text-[#00ff41]" title="Restart Game">
+    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path>
+      <path d="M3 3v5h5"></path>
+    </svg>
+  </button>
+
+  <div class="mb-4 flex flex-col items-center justify-center w-full max-w-[300px]">
+    <div class="font-pixel text-[#00ff41] text-2xl mb-2">Tic Tac Toe</div>
+    <div class="flex gap-2 relative z-30">
+      <button class="ttt-mode-btn px-2 py-1 text-[10px] font-pixel border border-[#444] rounded-none bg-[#111] text-[#ccc] hover:bg-[#222] active" data-mode="player">PVP</button>
+      <button class="ttt-mode-btn px-2 py-1 text-[10px] font-pixel border border-[#444] rounded-none bg-[#111] text-[#ccc] hover:bg-[#222]" data-mode="easy">EASY</button>
+      <button class="ttt-mode-btn px-2 py-1 text-[10px] font-pixel border border-[#444] rounded-none bg-[#111] text-[#ccc] hover:bg-[#222]" data-mode="hard">HARD</button>
+    </div>
+  </div>
+
+  <div class="font-pixel text-[#888] text-sm mb-4 h-4" id="ttt-status"></div>
+
+  <div class="relative w-full max-w-[300px] aspect-square">
+    <div id="ttt-grid" class="w-full h-full grid grid-cols-3 grid-rows-3 gap-2">
+      {Array.from({length: 9}).map((_, i) => (
+        <button class="ttt-cell bg-[#111] border-2 border-[#333] rounded-none text-4xl font-pixel flex items-center justify-center hover:bg-[#111] transition-colors" data-index={i}></button>
+      ))}
+    </div>
+
+    <!-- Game Over / Start Overlay -->
+    <div id="ttt-overlay" class="absolute inset-0 bg-black/80  flex flex-col items-center justify-center rounded-none z-20">
+      <h3 id="ttt-result" class="font-pixel text-[#00ff41] text-3xl mb-6 text-center">Tic Tac Toe</h3>
+      <button id="ttt-reset-btn" class="px-6 py-2 bg-[#00ff41]/10 border-2 border-[#00ff41]/50 text-[#00ff41] hover:bg-[#00ff41]/20 hover:border-[#00ff41] rounded-none font-pixel transition-colors">
+        PLAY
+      </button>
+    </div>
+  </div>
+
+</div>
+
+<style>
+  .ttt-mode-btn.active {
+    background-color: #00ff41;
+    color: #000;
+    border-color: #00ff41;
+  }
+  .ttt-cell.x { color: #00ff41; }
+  .ttt-cell.o { color: #ffff00; }
+</style>
+
+<script>
+  const container  = document.getElementById('ttt-container');
+  const cells      = Array.from(document.querySelectorAll('.ttt-cell')) as HTMLButtonElement[];
+  const modeBtns   = Array.from(document.querySelectorAll('.ttt-mode-btn')) as HTMLButtonElement[];
+  const statusEl   = document.getElementById('ttt-status') as HTMLElement;
+  const overlay    = document.getElementById('ttt-overlay') as HTMLElement;
+  const resultEl   = document.getElementById('ttt-result') as HTMLElement;
+  const resetBtn   = document.getElementById('ttt-reset-btn') as HTMLButtonElement;
+  const restartBtn = document.getElementById('ttt-restart-btn') as HTMLButtonElement;
+
+  if (container && cells.length && overlay && resultEl && resetBtn) {
+
+    // ── State ────────────────────────────────────────────────────────────────
+    let board: string[]   = Array(9).fill('');
+    let currentPlayer     = 'X';
+    let gameActive        = false;
+    let mode              = 'player';
+
+    const WIN_LINES = [
+      [0,1,2],[3,4,5],[6,7,8],
+      [0,3,6],[1,4,7],[2,5,8],
+      [0,4,8],[2,4,6]
+    ];
+
+    // ── Overlay helpers ──────────────────────────────────────────────────────
+    function showOverlay(title: string, btnLabel: string) {
+      gameActive = false;
+      resultEl.textContent  = title;
+      resetBtn.textContent  = btnLabel;
+      overlay.style.display = 'flex';
+    }
+
+    function hideOverlay() {
+      overlay.style.display = 'none';
+    }
+
+    // ── Game control ─────────────────────────────────────────────────────────
+    function clearBoard() {
+      board = Array(9).fill('');
+      cells.forEach(c => {
+        c.textContent = '';
+        c.classList.remove('x', 'o');
+      });
+    }
+
+    function startGame() {
+      clearBoard();
+      currentPlayer = 'X';
+      gameActive    = true;
+      if (statusEl) statusEl.textContent = "X's Turn";
+      hideOverlay();
+    }
+
+    function goToStartScreen() {
+      clearBoard();
+      if (statusEl) statusEl.textContent = '';
+      showOverlay('Tic Tac Toe', 'PLAY');
+    }
+
+    // ── Win / draw check ─────────────────────────────────────────────────────
+    function checkResult(): boolean {
+      for (const [a, b, c] of WIN_LINES) {
+        if (board[a] && board[a] === board[b] && board[a] === board[c]) {
+          if (statusEl) statusEl.textContent = 'Game Over';
+          showOverlay(`${board[a]} Wins!`, 'PLAY AGAIN');
+          return true;
+        }
+      }
+      if (!board.includes('')) {
+        if (statusEl) statusEl.textContent = 'Game Over';
+        showOverlay("It's a Draw!", 'PLAY AGAIN');
+        return true;
+      }
+      return false;
+    }
+
+    // ── Place a piece ────────────────────────────────────────────────────────
+    function place(cell: HTMLButtonElement, idx: number) {
+      board[idx]        = currentPlayer;
+      cell.textContent  = currentPlayer;
+      cell.classList.add(currentPlayer.toLowerCase());
+    }
+
+    // ── Cell click ───────────────────────────────────────────────────────────
+    function handleCellClick(e: Event) {
+      if (!gameActive) return;
+      const cell = e.currentTarget as HTMLButtonElement;
+      const idx  = parseInt(cell.dataset.index ?? '0');
+      if (board[idx] !== '') return;
+
+      place(cell, idx);
+      if (checkResult()) return;
+
+      currentPlayer = currentPlayer === 'X' ? 'O' : 'X';
+      if (statusEl) statusEl.textContent = `${currentPlayer}'s Turn`;
+
+      if (mode !== 'player' && currentPlayer === 'O') {
+        gameActive = false;
+        setTimeout(() => { gameActive = true; aiMove(); }, 400);
+      }
+    }
+
+    // ── AI move ──────────────────────────────────────────────────────────────
+    function aiMove() {
+      if (!gameActive) return;
+      let idx = -1;
+      if (mode === 'easy') {
+        const empty = board.map((v,i) => v==='' ? i : -1).filter(i => i !== -1);
+        idx = empty[Math.floor(Math.random() * empty.length)] ?? -1;
+      } else {
+        idx = bestMinimax([...board], 'O');
+      }
+      if (idx === -1) return;
+      const cell = cells[idx];
+      if (!cell) return;
+      place(cell, idx);
+      if (!checkResult()) {
+        currentPlayer = 'X';
+        if (statusEl) statusEl.textContent = "X's Turn";
+      }
+    }
+
+    // ── Minimax ──────────────────────────────────────────────────────────────
+    function bestMinimax(b: string[], player: string): number {
+      const scores = b.map((v, i) => {
+        if (v !== '') return null;
+        b[i] = player;
+        const s = minimaxScore(b, player === 'O' ? 'X' : 'O', 0);
+        b[i] = '';
+        return { i, s };
+      }).filter(Boolean) as {i:number, s:number}[];
+
+      if (!scores.length) return -1;
+      return scores.reduce((best, m) => m.s > best.s ? m : best).i;
+    }
+
+    function minimaxScore(b: string[], player: string, depth: number): number {
+      for (const [a,c,d] of WIN_LINES) {
+        if (b[a] && b[a]===b[c] && b[a]===b[d])
+          return b[a]==='O' ? 10-depth : depth-10;
+      }
+      const empty = b.map((v,i) => v==='' ? i : -1).filter(i => i !== -1);
+      if (!empty.length) return 0;
+      const results = empty.map(i => {
+        b[i] = player;
+        const s = minimaxScore(b, player==='O'?'X':'O', depth+1);
+        b[i] = '';
+        return s;
+      });
+      return player === 'O' ? Math.max(...results) : Math.min(...results);
+    }
+
+    // ── Event listeners ──────────────────────────────────────────────────────
+    cells.forEach(c => c.addEventListener('click', handleCellClick));
+
+    resetBtn.addEventListener('click', startGame);
+
+    restartBtn?.addEventListener('click', goToStartScreen);
+
+    modeBtns.forEach(btn => {
+      btn.addEventListener('click', () => {
+        modeBtns.forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        mode = btn.dataset.mode ?? 'player';
+        startGame(); // immediately start in new mode, no extra PLAY click needed
+      });
+    });
+
+    // ── Boot ─────────────────────────────────────────────────────────────────
+    goToStartScreen();
+  }
+</script>

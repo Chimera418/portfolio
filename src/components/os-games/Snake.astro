@@ -1,0 +1,306 @@
+---
+// Snake.astro
+---
+<div class="w-full h-full flex flex-col items-center justify-center bg-black p-4 relative" id="snake-container">
+  <button id="snake-restart-btn" class="absolute top-4 right-4 p-2 bg-black hover:bg-[#222] rounded-none border border-[#333] transition-colors z-20 text-[#00ff41]" title="Restart Game">
+    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path>
+      <path d="M3 3v5h5"></path>
+    </svg>
+  </button>
+  
+  <div class="mb-4 flex items-center justify-between w-full max-w-[400px]">
+    <div class="font-pixel text-[#00ff41] text-xl">Score: <span id="snake-score">0</span></div>
+    <div class="font-pixel text-[#888] text-sm">High: <span id="snake-highscore">0</span></div>
+  </div>
+
+  <div class="relative">
+    <canvas id="snake-canvas" width="400" height="400" class="border-2 border-[#00ff41] rounded-none bg-black shadow-[0_0_15px_rgba(0,255,65,0.3)]"></canvas>
+    
+    <!-- Start/Game Over Overlay -->
+    <div id="snake-overlay" class="absolute inset-0 bg-black/80  flex flex-col items-center justify-center rounded-none">
+      <h3 id="snake-title" class="font-pixel text-[#00ff41] text-2xl mb-4">SNAKE</h3>
+      <button id="snake-start-btn" class="px-6 py-2 bg-[#00ff41]/10 border-2 border-[#00ff41]/50 text-[#00ff41] hover:bg-[#00ff41]/20 hover:border-[#00ff41] rounded-none font-pixel transition-colors">
+        PLAY
+      </button>
+    </div>
+  </div>
+
+  <div class="mt-4 pb-4 text-center">
+    <p class="font-pixel text-[10px] text-[#888] uppercase tracking-widest">Use Arrow Keys or WASD</p>
+  </div>
+</div>
+
+<script>
+  const canvas = document.getElementById('snake-canvas') as HTMLCanvasElement;
+  const ctx = canvas?.getContext('2d');
+  const scoreEl = document.getElementById('snake-score');
+  const highScoreEl = document.getElementById('snake-highscore');
+  const overlay = document.getElementById('snake-overlay');
+  const title = document.getElementById('snake-title');
+  const startBtn = document.getElementById('snake-start-btn');
+  const restartBtn = document.getElementById('snake-restart-btn');
+
+  if (canvas && ctx && startBtn && overlay && title) {
+    const grid = 20;
+    const count = 20; // 400/20 = 20 grids
+    
+    let snake = [];
+    let snakeLength = 4;
+    let dx = grid;
+    let dy = 0;
+    let apple = { x: 300, y: 200 };
+    let score = 0;
+    let highScore = parseInt(localStorage.getItem('snake_highscore') || '0');
+    if (highScoreEl) highScoreEl.textContent = highScore.toString();
+
+    let gameLoop: number;
+    let isPlaying = false;
+    let isPaused = false;
+    let lastTime = 0;
+    const speed = 100; // ms per frame
+
+    // Input queue — buffer key presses, consume one per tick to prevent
+    // double-input reversals that cause instant game-over
+    let inputQueue: { dx: number; dy: number }[] = [];
+    
+    // Colors
+    const colors = {
+      snake: '#22c55e', // green-500
+      apple: '#ef4444', // red-500
+      grid:  'rgba(128, 128, 128, 0.2)' // neutral gray, visible in both dark and light modes
+    };
+
+    function initGame() {
+      snake = [];
+      for (let i = 0; i < snakeLength; i++) {
+        snake.push({ x: 160 - i * grid, y: 160 });
+      }
+      dx = grid;
+      dy = 0;
+      inputQueue = [];
+      score = 0;
+      if (scoreEl) scoreEl.textContent = '0';
+      spawnApple();
+    }
+
+    function spawnApple() {
+      apple.x = Math.floor(Math.random() * count) * grid;
+      apple.y = Math.floor(Math.random() * count) * grid;
+      
+      // Make sure it doesn't spawn on snake
+      for (let cell of snake) {
+        if (cell.x === apple.x && cell.y === apple.y) {
+          spawnApple();
+          break;
+        }
+      }
+    }
+
+    function gameOver() {
+      isPlaying = false;
+      cancelAnimationFrame(gameLoop);
+      if (score > highScore) {
+        highScore = score;
+        localStorage.setItem('snake_highscore', highScore.toString());
+        if (highScoreEl) highScoreEl.textContent = highScore.toString();
+      }
+      
+      window.dispatchEvent(new CustomEvent('arcade-game-over', { detail: { game: 'snake', score: score } }));
+      
+      title.textContent = 'GAME OVER';
+      startBtn.textContent = 'TRY AGAIN';
+      overlay.classList.remove('hidden');
+    }
+
+    function pauseGame() {
+      isPlaying = false;
+      isPaused = true;
+      cancelAnimationFrame(gameLoop);
+      title.textContent = 'PAUSED';
+      startBtn.textContent = 'RESUME';
+      overlay.classList.remove('hidden');
+    }
+
+    function loop(timestamp: number) {
+      if (!isPlaying) return;
+      gameLoop = requestAnimationFrame(loop);
+
+      if (timestamp - lastTime < speed) return;
+      lastTime = timestamp;
+
+      // Apply next queued direction (one per tick)
+      if (inputQueue.length > 0) {
+        const next = inputQueue.shift()!;
+        dx = next.dx;
+        dy = next.dy;
+      }
+
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      
+      // Draw Grid
+      ctx.strokeStyle = colors.grid;
+      ctx.beginPath();
+      for(let i=0; i<=canvas.width; i+=grid){
+        ctx.moveTo(i, 0); ctx.lineTo(i, canvas.height);
+        ctx.moveTo(0, i); ctx.lineTo(canvas.width, i);
+      }
+      ctx.stroke();
+
+      // Move snake
+      const head = { x: snake[0].x + dx, y: snake[0].y + dy };
+      snake.unshift(head);
+
+      // Check wall collision
+      if (head.x < 0 || head.x >= canvas.width || head.y < 0 || head.y >= canvas.height) {
+        gameOver();
+        return;
+      }
+
+      // Check apple collision
+      if (head.x === apple.x && head.y === apple.y) {
+        score += 10;
+        if (scoreEl) scoreEl.textContent = score.toString();
+        spawnApple();
+      } else {
+        snake.pop(); // Remove tail if no apple eaten
+      }
+
+      // Check self collision
+      for (let i = 1; i < snake.length; i++) {
+        if (head.x === snake[i].x && head.y === snake[i].y) {
+          gameOver();
+          return;
+        }
+      }
+
+      // Draw Apple
+      ctx.fillStyle = colors.apple;
+      ctx.fillRect(apple.x, apple.y, grid - 1, grid - 1);
+
+      // Draw Snake
+      snake.forEach((cell, index) => {
+        ctx.fillStyle = index === 0 ? colors.snake : colors.snake;
+        // Make body slightly transparent or different
+        if (index > 0) ctx.globalAlpha = 0.8;
+        ctx.fillRect(cell.x, cell.y, grid - 1, grid - 1);
+        ctx.globalAlpha = 1.0;
+      });
+    }
+
+    startBtn.addEventListener('click', () => {
+      overlay.classList.add('hidden');
+      if (!isPaused) {
+        // Fresh start or retry
+        initGame();
+      }
+      isPaused = false;
+      isPlaying = true;
+      lastTime = performance.now();
+      gameLoop = requestAnimationFrame(loop);
+    });
+
+    if (restartBtn) {
+      restartBtn.addEventListener('click', () => {
+        cancelAnimationFrame(gameLoop);
+        isPlaying = false;
+        isPaused = false;
+        initGame();
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        title.textContent = 'SNAKE';
+        startBtn.textContent = 'PLAY';
+        overlay.classList.remove('hidden');
+      });
+    }
+
+    // Handle Resize/Visibility pausing if needed
+    // But since it's an overlay game, we'll just let it run or pause if the game container is hidden
+
+    // Only allow direction keys that aren't a 180° reversal
+    const enqueue = (ndx: number, ndy: number) => {
+      // Look at last queued direction (or current) to prevent reversals
+      const last = inputQueue.length > 0 ? inputQueue[inputQueue.length - 1] : { dx, dy };
+      if (ndx === -last.dx && last.dx !== 0) return; // would reverse horizontally
+      if (ndy === -last.dy && last.dy !== 0) return; // would reverse vertically
+      if (ndx === last.dx && ndy === last.dy) return; // same direction, skip
+      if (inputQueue.length < 2) inputQueue.push({ dx: ndx, dy: ndy }); // cap queue at 2
+    };
+
+    // Keyboard controls
+    document.addEventListener('keydown', (e) => {
+      if (!isPlaying) return;
+      
+      // Prevent default scrolling for arrow keys
+      if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', ' '].includes(e.key)) {
+        // Only prevent default if the game is visible (part of the active overlay)
+        const gameContainer = document.getElementById('game-content-snake');
+        if (gameContainer && !gameContainer.classList.contains('hidden')) {
+          e.preventDefault();
+        } else {
+          return; // don't control if hidden
+        }
+      }
+
+      if (e.key === 'ArrowLeft'  || e.key === 'a') enqueue(-grid, 0);
+      else if (e.key === 'ArrowRight' || e.key === 'd') enqueue(grid, 0);
+      else if (e.key === 'ArrowUp'    || e.key === 'w') enqueue(0, -grid);
+      else if (e.key === 'ArrowDown'  || e.key === 's') enqueue(0, grid);
+    });
+
+    // Touch controls
+    let touchStartX = 0;
+    let touchStartY = 0;
+    const snakeContainer = document.getElementById('snake-container');
+    if (snakeContainer) {
+      snakeContainer.addEventListener('touchstart', (e) => {
+        if (!isPlaying) return;
+        touchStartX = e.changedTouches[0].screenX;
+        touchStartY = e.changedTouches[0].screenY;
+        e.preventDefault();
+      }, { passive: false });
+
+      snakeContainer.addEventListener('touchmove', (e) => {
+        if (isPlaying) e.preventDefault(); // prevent scroll
+      }, { passive: false });
+
+      snakeContainer.addEventListener('touchend', (e) => {
+        if (!isPlaying) return;
+        const touchEndX = e.changedTouches[0].screenX;
+        const touchEndY = e.changedTouches[0].screenY;
+        
+        const deltaX = touchEndX - touchStartX;
+        const deltaY = touchEndY - touchStartY;
+        
+        if (Math.abs(deltaX) > Math.abs(deltaY)) {
+          if (Math.abs(deltaX) > 30) {
+            if (deltaX > 0) enqueue(grid, 0);
+            else enqueue(-grid, 0);
+          }
+        } else {
+          if (Math.abs(deltaY) > 30) {
+            if (deltaY > 0) enqueue(0, grid);
+            else enqueue(0, -grid);
+          }
+        }
+        e.preventDefault();
+      }, { passive: false });
+    }
+    
+    // Pause game when hidden
+    const observer = new MutationObserver((mutations) => {
+      mutations.forEach((mutation) => {
+        if (mutation.type === 'attributes' && mutation.attributeName === 'class') {
+          const target = mutation.target as HTMLElement;
+          if (target.classList.contains('hidden') && isPlaying) {
+            pauseGame();
+          }
+        }
+      });
+    });
+    
+    const gameContainer = document.getElementById('game-content-snake');
+    if (gameContainer) {
+      observer.observe(gameContainer, { attributes: true });
+    }
+  }
+</script>

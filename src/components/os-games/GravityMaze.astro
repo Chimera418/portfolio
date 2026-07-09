@@ -1,0 +1,523 @@
+---
+// GravityMaze.astro
+---
+
+<div id="game-wrapper" class="relative flex flex-col items-center justify-center w-full h-full bg-black-dim font-sans p-4 text-[#ccc]-[#00ff41] select-none overflow-hidden">
+    <button id="maze-restart-btn" class="absolute top-4 right-4 p-2 bg-black hover:bg-[#222] rounded-none border border-[#333] transition-colors z-20 text-[#888] hover:text-[#00ff41]" title="Restart Game from Level 1">
+        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path>
+            <path d="M3 3v5h5"></path>
+        </svg>
+    </button>
+    <div id="game-core" class="flex flex-col items-center justify-center w-full">
+        
+        <div id="game-header" class="flex items-center justify-between w-full max-w-[420px] mb-4">
+            <span id="game-score" class="text-[clamp(13px,1.7vw,18px)] tracking-[.12em] text-[#888] font-mono">Moves: 0</span>
+            <span id="game-title" class="text-[clamp(13px,1.7vw,18px)] tracking-[.18em] uppercase text-[#00ff41] font-pixel">Gravity Maze</span>
+            <span id="game-level" class="text-[clamp(13px,1.7vw,18px)] tracking-[.12em] text-[#888] font-mono">Level 1</span>
+        </div>
+
+        <div id="board-container" class="relative w-[min(80vw,65vh,400px)] h-[min(80vw,65vh,400px)] my-2">
+            <div id="board" class="w-full h-full grid border-2 border-[#333] box-border relative bg-black-dim rounded-none p-[2px] gap-[2px] origin-center"></div>
+
+            <div id="victory-overlay" class="hidden absolute inset-0 bg-black-dim/95  flex-col items-center justify-center gap-4 text-center z-10 rounded-none shadow-xl">
+                <div id="victory-title" class="text-[clamp(18px,2.5vw,24px)] tracking-[.18em] uppercase text-[#ccc]-[#00ff41] font-pixel">Level complete</div>
+                <div id="victory-msg" class="text-[clamp(12px,1.5vw,14px)] tracking-[.08em] text-[#888] max-w-[80%] leading-relaxed mb-2 font-mono"></div>
+                <button class="btn" id="btn-next">Next level →</button>
+            </div>
+        </div>
+
+        <div id="game-controls" class="flex items-center justify-between w-full max-w-[440px] gap-3 mt-4">
+            <button class="btn flex items-center justify-center gap-2 !px-4 !py-2.5" id="btn-left">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" class="opacity-80"><path d="M19 12H5"/><path d="M12 19l-7-7 7-7"/></svg>
+                <span>Left</span>
+            </button>
+            <button class="btn ghost text-center !px-3 !py-2.5" id="btn-reset" title="Press 'R' to restart">
+                Restart Level
+            </button>
+            <button class="btn flex items-center justify-center gap-2 !px-4 !py-2.5" id="btn-right">
+                <span>Right</span>
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" class="opacity-80"><path d="M5 12h14"/><path d="M12 5l7 7-7 7"/></svg>
+            </button>
+        </div>
+    </div>
+</div>
+
+<style is:global>
+/* Retro DOS style for GravityMaze */
+.cell {
+    position: relative;
+    box-sizing: border-box;
+    background: rgba(0, 255, 65, 0.03);
+    border-radius: 0;
+}
+
+.cell.wall {
+    background: #333;
+    border: 1px solid #555;
+}
+
+.pion-ball {
+    position: absolute;
+    inset: 15%;
+    background: #00ff41;
+    border-radius: 0;
+    z-index: 5;
+}
+
+.cell.hole::after {
+    content: '';
+    position: absolute;
+    inset: 15%;
+    border: 2px solid #ffff00;
+    border-radius: 0;
+    background: transparent;
+}
+
+.btn {
+    background: #111;
+    color: #ccc;
+    border: 1px solid #444;
+    font-family: monospace;
+    font-size: clamp(10px, 1.3vw, 13px);
+    letter-spacing: .14em;
+    text-transform: uppercase;
+    padding: 12px 20px;
+    border-radius: 0;
+    transition: background .18s ease, color .18s ease, border-color .18s ease, transform .1s ease;
+    cursor: pointer;
+    box-shadow: none;
+}
+
+.btn:hover {
+    border-color: #00ff41;
+    color: #00ff41;
+}
+
+.btn:active {
+    transform: scale(0.95);
+}
+
+.btn.ghost {
+    background: transparent;
+    color: #888;
+    border-color: transparent;
+    box-shadow: none;
+}
+
+.btn.ghost:hover {
+    color: #ccc;
+    border-color: #444;
+}
+
+.victory-visible {
+    display: flex !important;
+    animation: fadeIn 0.4s ease-out forwards;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+@media (max-width: 480px) {
+    #game-controls { gap: 8px; }
+    .btn { padding: 10px 14px; }
+}
+</style>
+
+<script>
+// Gravity Maze - Endless Mode Engine
+const state = {
+    levelIndex: 0,
+    size: 0,
+    grid: [],
+    pion: null,
+    hole: null,
+    moves: 0,
+    boardAngle: 0,
+    busy: false,
+    lastDir: null,
+    par: 0,
+};
+
+let boardEl, scoreEl, levelEl, victoryOverlay, victoryMsg;
+let domCells = []; // 2D array caching DOM elements
+let pionEl; // The single absolute element for the ball
+
+const DIRS = [
+    [1, 0],   // 0: down
+    [0, -1],  // 1: left
+    [-1, 0],  // 2: up
+    [0, 1]    // 3: right
+];
+
+document.addEventListener('DOMContentLoaded', () => {
+    boardEl = document.getElementById('board');
+    scoreEl = document.getElementById('game-score');
+    levelEl = document.getElementById('game-level');
+    victoryOverlay = document.getElementById('victory-overlay');
+    victoryMsg = document.getElementById('victory-msg');
+
+    if (!boardEl) return;
+
+    document.getElementById('btn-left').addEventListener('click', () => rotate('left'));
+    document.getElementById('btn-right').addEventListener('click', () => rotate('right'));
+    document.getElementById('btn-reset').addEventListener('click', onRestart);
+    document.getElementById('maze-restart-btn').addEventListener('click', onFullRestart);
+    document.getElementById('btn-next').addEventListener('click', onNextLevel);
+    document.addEventListener('keydown', onKey);
+
+    // Setup Observer for initialization when visible
+    const wrapperEl = document.getElementById('game-wrapper');
+    const observer = new IntersectionObserver((entries) => {
+        if (entries[0].isIntersecting) {
+            observer.disconnect();
+            const savedLevel = localStorage.getItem('gravityMazeEndlessLevel');
+            state.levelIndex = savedLevel ? parseInt(savedLevel, 10) : 0;
+            generateAndLoadLevel(state.levelIndex);
+        }
+    });
+    observer.observe(wrapperEl);
+});
+
+// Breadth-First Search logic to guarantee solvable endless levels
+function fallSimulate(grid, r, c, dir, tr, tc) {
+    let dr = DIRS[dir][0];
+    let dc = DIRS[dir][1];
+    let cr = r, cc = c;
+    while(true) {
+        if (cr === tr && cc === tc) return { r: cr, c: cc, won: true };
+        let nr = cr + dr;
+        let nc = cc + dc;
+        if (nr < 0 || nr >= grid.length || nc < 0 || nc >= grid[0].length) break;
+        if (grid[nr][nc] === 1) break; // hit wall
+        cr = nr;
+        cc = nc;
+    }
+    return { r: cr, c: cc, won: (cr === tr && cc === tc) };
+}
+
+function getPar(grid, sr, sc, tr, tc) {
+    let q = [{r: sr, c: sc, dir: 0, dist: 0}];
+    let visited = new Set();
+    visited.add(`${sr},${sc},0`);
+    
+    let head = 0;
+    while(head < q.length) {
+        let curr = q[head++];
+        
+        // Check Left turn (-90) -> gravity becomes Right (3) relative to board
+        let dirL = (curr.dir + 3) % 4;
+        let resL = fallSimulate(grid, curr.r, curr.c, dirL, tr, tc);
+        if (resL.won) return curr.dist + 1;
+        let stL = `${resL.r},${resL.c},${dirL}`;
+        if (!visited.has(stL)) {
+            visited.add(stL);
+            q.push({r: resL.r, c: resL.c, dir: dirL, dist: curr.dist + 1});
+        }
+        
+        // Check Right turn (+90) -> gravity becomes Left (1) relative to board
+        let dirR = (curr.dir + 1) % 4;
+        let resR = fallSimulate(grid, curr.r, curr.c, dirR, tr, tc);
+        if (resR.won) return curr.dist + 1;
+        let stR = `${resR.r},${resR.c},${dirR}`;
+        if (!visited.has(stR)) {
+            visited.add(stR);
+            q.push({r: resR.r, c: resR.c, dir: dirR, dist: curr.dist + 1});
+        }
+    }
+    return -1; // Not reachable
+}
+
+function generateLevel(levelIdx) {
+    // Grid sizes scale from 7x7 to 13x13 endlessly
+    let size = Math.min(13, 7 + Math.floor(levelIdx / 4));
+    if (size % 2 === 0) size++; // Keep it odd to center nicely
+    
+    let attempts = 0;
+    while(true) {
+        attempts++;
+        if (attempts > 1000) {
+            // Failsafe: if we get stuck (should be rare), restart level scale
+            levelIdx = Math.max(0, levelIdx - 1);
+            size = Math.min(13, 7 + Math.floor(levelIdx / 4));
+            if (size % 2 === 0) size++;
+            attempts = 0;
+        }
+
+        let grid = Array.from({length: size}, () => new Array(size).fill(0));
+        
+        // Outer walls
+        for(let i=0; i<size; i++) {
+            grid[0][i] = 1; grid[size-1][i] = 1;
+            grid[i][0] = 1; grid[i][size-1] = 1;
+        }
+        
+        // Inner walls (increase density slightly as levels progress)
+        let density = Math.min(0.20, 0.12 + (levelIdx * 0.005));
+        let numWalls = Math.floor((size * size) * density); 
+        for(let i=0; i<numWalls; i++) {
+            let r = 1 + Math.floor(Math.random() * (size - 2));
+            let c = 1 + Math.floor(Math.random() * (size - 2));
+            grid[r][c] = 1;
+        }
+        
+        // Player start
+        let sr, sc;
+        do {
+            sr = 1 + Math.floor(Math.random() * (size - 2));
+            sc = 1 + Math.floor(Math.random() * (size - 2));
+        } while (grid[sr][sc] !== 0);
+        
+        // Goal
+        let tr, tc;
+        do {
+            tr = 1 + Math.floor(Math.random() * (size - 2));
+            tc = 1 + Math.floor(Math.random() * (size - 2));
+        } while (grid[tr][tc] !== 0 || (tr === sr && tc === sc));
+        
+        // Simulate initial fall since ball drops instantly at start
+        let initPos = fallSimulate(grid, sr, sc, 0, tr, tc);
+        if (initPos.won) continue; // Instantly won on spawn, regenerate
+        
+        let par = getPar(grid, initPos.r, initPos.c, tr, tc);
+        let minPar = Math.min(12, 2 + Math.floor(levelIdx / 2));
+        
+        // If it's reachable and challenging enough
+        if (par >= minPar && par <= minPar + 6) {
+            grid[initPos.r][initPos.c] = 2; // Spawn player at rest
+            grid[tr][tc] = 3;               // Spawn goal
+            return { grid, par, size };
+        }
+    }
+}
+
+function generateAndLoadLevel(idx) {
+    state.levelIndex = idx;
+    localStorage.setItem('gravityMazeEndlessLevel', idx.toString());
+    
+    // Generate new layout
+    const generated = generateLevel(idx);
+    
+    // Save generated state so "Restart" works
+    state.initialGrid = generated.grid.map(row => [...row]);
+    state.par = generated.par;
+    state.size = generated.size;
+    
+    loadLevelFromState();
+}
+
+function loadLevelFromState() {
+    state.grid = state.initialGrid.map(row => [...row]);
+    state.moves = 0;
+    state.boardAngle = 0;
+    state.busy = false;
+    state.lastDir = null;
+
+    state.pion = null;
+    state.hole = null;
+    
+    for (let r = 0; r < state.size; r++) {
+        for (let c = 0; c < state.size; c++) {
+            if (state.grid[r][c] === 2) state.pion = { r, c };
+            if (state.grid[r][c] === 3) state.hole = { r, c };
+        }
+    }
+
+    boardEl.style.transition = 'none';
+    boardEl.style.transform  = 'rotate(0deg)';
+    victoryOverlay.classList.remove('victory-visible');
+
+    updateHUD();
+    renderBoardFull();
+}
+
+function onRestart() { 
+    if (state.busy) return;
+    loadLevelFromState(); 
+}
+
+function onFullRestart() {
+    if (state.busy) return;
+    victoryOverlay.classList.remove('victory-visible');
+    generateAndLoadLevel(0);
+}
+
+function onNextLevel() {
+    victoryOverlay.classList.remove('victory-visible');
+    generateAndLoadLevel(state.levelIndex + 1);
+}
+
+// Generates the DOM exactly once per level load
+function renderBoardFull() {
+    boardEl.innerHTML = '';
+    boardEl.style.gridTemplateColumns = `repeat(${state.size}, 1fr)`;
+    boardEl.style.gridTemplateRows = `repeat(${state.size}, 1fr)`;
+    domCells = [];
+    
+    pionEl = document.createElement('div');
+    pionEl.className = 'pion-ball';
+    
+    const frag = document.createDocumentFragment();
+    for (let r = 0; r < state.size; r++) {
+        domCells[r] = [];
+        for (let c = 0; c < state.size; c++) {
+            const cell = document.createElement('div');
+            let classes = 'cell';
+            const v = state.grid[r][c];
+            if (v === 1) classes += ' wall';
+            if (v === 3) classes += ' hole';
+            cell.className = classes;
+            frag.appendChild(cell);
+            domCells[r][c] = cell;
+            
+            if (v === 2) {
+                cell.appendChild(pionEl);
+            }
+        }
+    }
+    boardEl.appendChild(frag);
+}
+
+// Caching-based visual update. Eliminates DOM Node recreation.
+function syncBoardVisuals() {
+    for (let r = 0; r < state.size; r++) {
+        for (let c = 0; c < state.size; c++) {
+            const v = state.grid[r][c];
+            let classes = 'cell';
+            if (v === 1) classes += ' wall';
+            if (v === 3) classes += ' hole';
+            domCells[r][c].className = classes;
+            
+            if (v === 2) {
+                domCells[r][c].appendChild(pionEl);
+            }
+        }
+    }
+}
+
+function updateHUD() {
+    scoreEl.textContent = `Moves: ${state.moves}`;
+    levelEl.textContent = `Level ${state.levelIndex + 1}`;
+}
+
+function rotate(dir) {
+    if (state.busy) return;
+    state.busy = true;
+    state.lastDir = dir;
+    state.moves++;
+    updateHUD();
+
+    state.boardAngle += dir === 'right' ? 90 : -90;
+    boardEl.style.transition = 'transform 0.25s cubic-bezier(0.25, 1, 0.5, 1)';
+    boardEl.style.transform  = `rotate(${state.boardAngle}deg)`;
+
+    // Wait for physical CSS rotation
+    setTimeout(onRotationDone, 250);
+}
+
+function onRotationDone() {
+    // Reset CSS rotation to 0 instantly, but physically rotate the internal grid matrix to match
+    boardEl.style.transition = 'none';
+    boardEl.style.transform  = 'rotate(0deg)';
+    state.boardAngle = 0;
+
+    rotateMatrix(state.lastDir);
+    syncBoardVisuals();
+    
+    // Slight reflow force
+    void boardEl.offsetHeight;
+    
+    applyGravity();
+}
+
+function rotateMatrix(dir) {
+    const old  = state.grid;
+    const next = Array.from({ length: state.size }, () => new Array(state.size).fill(0));
+
+    for (let r = 0; r < state.size; r++) {
+        for (let c = 0; c < state.size; c++) {
+            if (dir === 'right') next[c][state.size - 1 - r] = old[r][c];
+            else                 next[state.size - 1 - c][r] = old[r][c];
+        }
+    }
+
+    const p = state.pion, h = state.hole;
+    if (dir === 'right') {
+        state.pion = { r: p.c,            c: state.size - 1 - p.r };
+        state.hole = { r: h.c,            c: state.size - 1 - h.r };
+    } else {
+        state.pion = { r: state.size - 1 - p.c, c: p.r };
+        state.hole = { r: state.size - 1 - h.c, c: h.r };
+    }
+
+    state.grid = next;
+}
+
+function applyGravity() {
+    const { r: fromR, c } = state.pion;
+    let destR = fromR;
+
+    for (let row = fromR + 1; row < state.size; row++) {
+        const v = state.grid[row][c];
+        if (v === 1) break;
+        destR = row;
+        if (v === 3) break;
+    }
+
+    if (destR === fromR) { finishTurn(); return; }
+
+    state.grid[fromR][c] = 0;
+    
+    // Calculate vertical fall distance in pixels
+    const distance = domCells[destR][c].offsetTop - domCells[fromR][c].offsetTop;
+    
+    // Apply smooth ease-in transform (gravity accelerates)
+    pionEl.style.transition = 'transform 0.18s cubic-bezier(0.5, 0, 1, 1)';
+    pionEl.style.transform = `translateY(${distance}px)`;
+    
+    setTimeout(() => {
+        // Snap instantly to the destination cell after the visual animation
+        pionEl.style.transition = 'none';
+        pionEl.style.transform = 'translateY(0)';
+        domCells[destR][c].appendChild(pionEl);
+        
+        state.pion = { r: destR, c };
+        state.grid[destR][c] = 2;
+        finishTurn();
+    }, 180);
+}
+
+function finishTurn() {
+    state.busy = false;
+
+    if (state.pion.r === state.hole.r && state.pion.c === state.hole.c) {
+        showVictory();
+    }
+}
+
+function showVictory() {
+    const perfect = state.moves <= state.par;
+    victoryMsg.innerHTML = 
+        `Your score: <strong class="text-[#ccc]-[#00ff41]">${state.moves}</strong> moves<br>` +
+        (perfect ? '<span class="text-yellow font-bold">Perfect score!</span>' : `Par for this level: <strong class="text-[#ccc]-[#00ff41]">${state.par}</strong>`);
+        
+    victoryOverlay.classList.add('victory-visible');
+}
+
+function onKey(e) {
+    // Only capture if game is visible
+    if (!boardEl.offsetParent) return;
+    if (victoryOverlay.classList.contains('victory-visible')) {
+        if (e.key === 'Enter') onNextLevel();
+        return;
+    }
+
+    switch (e.key) {
+        case 'ArrowLeft':  e.preventDefault(); rotate('left');  break;
+        case 'ArrowRight': e.preventDefault(); rotate('right'); break;
+        case 'r': case 'R': onRestart(); break;
+    }
+}
+</script>

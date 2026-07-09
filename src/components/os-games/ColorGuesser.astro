@@ -1,0 +1,264 @@
+---
+// ColorGuesser.astro — HSL "find the different block" game
+---
+
+<div class="w-full h-full flex flex-col items-center justify-center bg-black p-6 relative" id="cg-container">
+  <button id="cg-restart-btn" class="absolute top-4 right-4 p-2 bg-black hover:bg-[#222] rounded-none border border-[#333] transition-colors z-40 text-[#00ff41]" title="Restart Game">
+    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path>
+      <path d="M3 3v5h5"></path>
+    </svg>
+  </button>
+
+    <!-- Game Over / Start Overlay -->
+    <div id="cg-overlay" class="absolute inset-0 bg-black/80  flex flex-col items-center justify-center rounded-none z-30">
+      <h3 id="cg-message" class="font-pixel text-[#00ff41] text-3xl mb-4 text-center">Color Guesser</h3>
+      <button id="cg-retry-btn" class="px-6 py-2 bg-[#00ff41]/10 border-2 border-[#00ff41]/50 text-[#00ff41] hover:bg-[#00ff41]/20 hover:border-[#00ff41] rounded-none font-pixel transition-colors">
+        PLAY
+      </button>
+    </div>
+
+  <!-- Header -->
+  <div class="mb-8 flex flex-col items-center text-center gap-2">
+    <div class="font-pixel text-[#00ff41] text-xl tracking-wide">Color Shade Game</div>
+    <p class="text-[#888] text-xs font-mono">Find the block with a different shade or brightness.</p>
+  </div>
+
+  <!-- Block grid — fixed 3 col × 2 row like reference -->
+  <div id="cg-game" class="cg-grid mb-8"></div>
+
+  <!-- Score card -->
+  <div id="cg-score" class="cg-score">
+    Pick a block to play.
+  </div>
+
+  <!-- Try Again -->
+  <button id="cg-try-again" class="cg-try-again" style="display:none;">
+    Try Again
+  </button>
+
+</div>
+
+<style is:global>
+  /* ── Grid: 3 columns, 2 rows, fixed sizing matching reference ── */
+  #cg-game.cg-grid {
+    display: grid;
+    grid-auto-flow: column dense;
+    grid-template-rows: 110px 110px;
+    grid-auto-columns: 110px;
+  }
+
+  /* ── Individual blocks ── */
+  #cg-game .cg-block {
+    width: 100px;
+    height: 100px;
+    margin: 5px;
+    border-radius: 14px;
+    cursor: pointer;
+    box-sizing: border-box;
+    outline: 4px solid transparent;
+    outline-offset: 0px;
+    transition:
+      transform 0.15s cubic-bezier(0.34, 1.56, 0.64, 1),
+      outline-color 0.15s ease,
+      opacity 0.18s ease,
+      filter 0.18s ease;
+  }
+
+  #cg-game .cg-block:hover {
+    transform: scale(1.07);
+    z-index: 10;
+  }
+
+  #cg-game .cg-block:active {
+    transform: scale(0.95);
+  }
+
+  #cg-game .cg-block.revealed {
+    outline-color: var(--green, #a6e3a1);
+    transform: scale(1.07);
+    z-index: 10;
+    cursor: default;
+  }
+
+  #cg-game .cg-block.dimmed {
+    opacity: 0.25;
+    filter: saturate(0.3);
+    cursor: default;
+  }
+
+  /* ── Score card ── */
+  .cg-score {
+    text-align: center;
+    line-height: 2;
+    padding: 0.75em 3em;
+    border: 1px solid var(--highlight-med);
+    border-radius: 12px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.875rem;
+    color: var(--text-muted);
+    min-width: 240px;
+    background: var(--overlay);
+  }
+
+  /* ── Try Again button ── */
+  .cg-try-again {
+    margin-top: 0.75rem;
+    padding: 0.75em 3em;
+    background-color: var(--surface-bright, var(--surface));
+    border: 1px solid var(--highlight-med);
+    border-radius: 12px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.875rem;
+    color: var(--text-muted);
+    cursor: pointer;
+    transition: border-color 0.2s ease, color 0.2s ease;
+  }
+
+  .cg-try-again:hover {
+    border-color: var(--primary);
+    color: var(--primary);
+  }
+</style>
+
+<script>
+  const cgContainer  = document.getElementById('cg-container');
+
+  if (cgContainer) {
+    const gameEl     = document.getElementById('cg-game') as HTMLElement;
+    const scoreEl    = document.getElementById('cg-score') as HTMLElement;
+    const tryAgainEl = document.getElementById('cg-try-again') as HTMLButtonElement;
+    const restartBtn = document.getElementById('cg-restart-btn');
+    const overlay    = document.getElementById('cg-overlay');
+    const messageEl  = document.getElementById('cg-message');
+    const retryBtn   = document.getElementById('cg-retry-btn');
+
+    let score     = 0;
+    let highScore = parseInt(localStorage.getItem('cg_hsl_highscore') || '0');
+    let gameOverTimeout: number | undefined;
+
+    function rand(min: number, max: number) {
+      return Math.floor(Math.random() * (max - min + 1)) + min;
+    }
+
+    function shuffleArray<T>(arr: T[]): T[] {
+      for (let i = arr.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [arr[i], arr[j]] = [arr[j], arr[i]];
+      }
+      return arr;
+    }
+
+    function generateRound() {
+      gameEl.innerHTML = '';
+      gameEl.style.pointerEvents = 'auto';
+
+      const hue      = rand(0, 359);
+      const simSat   = rand(80, 100);
+      const simLight = rand(40, 60);
+
+      let diffLight: number;
+      do { diffLight = rand(25, 72); } while (Math.abs(diffLight - simLight) < 7);
+
+      const diffSat   = rand(80, 100);
+      const simColor  = `hsl(${hue}, ${simSat}%, ${simLight}%)`;
+      const diffColor = `hsl(${hue}, ${diffSat}%, ${diffLight}%)`;
+
+      const blocks: { color: string; isDiff: boolean }[] = [];
+      for (let i = 0; i < 5; i++) blocks.push({ color: simColor, isDiff: false });
+      blocks.push({ color: diffColor, isDiff: true });
+      shuffleArray(blocks);
+
+      let diffEl: HTMLDivElement | null = null;
+
+      blocks.forEach(({ color, isDiff }) => {
+        const div = document.createElement('div');
+        div.className = 'cg-block';
+        div.style.backgroundColor = color;
+
+        if (isDiff) {
+          diffEl = div;
+          div.addEventListener('click', handleCorrect);
+        } else {
+          div.addEventListener('click', () => handleWrong(diffEl!));
+        }
+
+        gameEl.appendChild(div);
+      });
+    }
+
+    function handleCorrect() {
+      score++;
+      scoreEl.innerHTML = `Score: <b>${score}</b> &nbsp;&nbsp;|&nbsp;&nbsp; <span style="color:var(--green)">Best: <b>${highScore}</b></span>`;
+      generateRound();
+    }
+
+    function handleWrong(diffEl: HTMLDivElement) {
+      gameEl.style.pointerEvents = 'none';
+
+      Array.from(gameEl.children).forEach(child => {
+        if (child === diffEl) child.classList.add('revealed');
+        else child.classList.add('dimmed');
+      });
+
+      let msg = '';
+      if (score > highScore) {
+        highScore = score;
+        localStorage.setItem('cg_hsl_highscore', highScore.toString());
+        msg = `New High Score!<br><span style="font-size:1.5em;color:#00ff41;display:block;margin-top:0.5rem">${highScore}</span>`;
+      } else {
+        msg  = `Game Over :(<br>Score: <b>${score}</b>`;
+        msg += `<br>Best: <b>${highScore}</b>`;
+      }
+      
+      window.dispatchEvent(new CustomEvent('arcade-game-over', { detail: { game: 'color-guesser', score: score } }));
+
+      if (messageEl) messageEl.innerHTML = msg;
+      
+      // Delay showing the overlay so user can see the correct color
+      gameOverTimeout = window.setTimeout(() => {
+        if (overlay) overlay.classList.remove('hidden');
+        if (retryBtn) retryBtn.textContent = 'RETRY';
+      }, 1500);
+    }
+
+    function initGame() {
+      if (gameOverTimeout) clearTimeout(gameOverTimeout);
+      score = 0;
+      scoreEl.innerHTML = `Score: <b>0</b> &nbsp;&nbsp;|&nbsp;&nbsp; <span style="color:var(--green)">Best: <b>${highScore}</b></span>`;
+      if (overlay) overlay.classList.add('hidden');
+      generateRound();
+    }
+
+    if (retryBtn) {
+      retryBtn.addEventListener('click', () => {
+        if (retryBtn.textContent?.trim() === 'PLAY') {
+          initGame();
+        } else {
+          if (messageEl) messageEl.textContent = 'Color Guesser';
+          if (retryBtn) retryBtn.textContent = 'PLAY';
+          gameEl.innerHTML = '';
+          score = 0;
+          scoreEl.innerHTML = `Score: <b>0</b> &nbsp;&nbsp;|&nbsp;&nbsp; <span style="color:var(--green)">Best: <b>${highScore}</b></span>`;
+        }
+      });
+    }
+
+    if (restartBtn) {
+      restartBtn.addEventListener('click', () => {
+        if (gameOverTimeout) clearTimeout(gameOverTimeout);
+        if (messageEl) messageEl.textContent = 'Color Guesser';
+        if (retryBtn) retryBtn.textContent = 'PLAY';
+        if (overlay) overlay.classList.remove('hidden');
+        gameEl.innerHTML = '';
+        score = 0;
+        scoreEl.innerHTML = `Your Score: <b>0</b>`;
+      });
+    }
+
+    // Wait for play click on load
+    if (messageEl) messageEl.textContent = 'Color Guesser';
+    if (retryBtn) retryBtn.textContent = 'PLAY';
+    if (overlay) overlay.classList.remove('hidden');
+  }
+</script>
