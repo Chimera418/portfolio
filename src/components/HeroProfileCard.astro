@@ -35,15 +35,16 @@ const { class: className } = Astro.props;
         </div>
 
         <p class="text-text-muted text-sm leading-relaxed max-w-lg">
-          Hey, welcome to my corner of the internet. Feel free to look around,
-          explore some projects, or leave a message in the guestbook. And if
-          you're the kind of person who clicks on everything, keep an eye
-          out—there are a few easter eggs hidden around the site.
+          Welcome to my corner of the internet, where I add the most random
+          stuff. Check out my projects, drop a note in the guestbook, or hunt
+          for easter eggs if you're into that.
         </p>
       </div>
 
       <!-- Scaled up blob taking the right side space -->
-      <div class="w-48 h-48 sm:w-56 sm:h-56 md:w-64 md:h-64 flex-shrink-0 self-center sm:self-center pointer-events-auto mt-4 sm:mt-0">
+      <div
+        class="w-48 h-48 sm:w-56 sm:h-56 md:w-64 md:h-64 flex-shrink-0 self-center sm:self-center pointer-events-auto mt-4 sm:mt-0"
+      >
         <InteractiveBlob client:load className="w-full h-full" />
       </div>
     </div>
@@ -56,12 +57,27 @@ const { class: className } = Astro.props;
         class="flex items-center gap-2 text-[9px] font-pixel text-text-muted uppercase tracking-wider"
       >
         <span
-          class="w-1.5 h-1.5 rounded-full bg-success animate-pulse inline-block"
-        ></span>
-        Clueless about life rn
+          id="hero-status-icon"
+          class="inline-flex items-center justify-center"
+        >
+          <svg
+            class="w-2.5 h-2.5 text-text-muted fill-current -translate-y-[1px]"
+            viewBox="0 0 24 24"
+          >
+            <path
+              fill-rule="evenodd"
+              clip-rule="evenodd"
+              d="M12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2ZM7.5 12C7.5 9.51472 9.51472 7.5 12 7.5C14.4853 7.5 16.5 9.51472 16.5 12C16.5 14.4853 14.4853 16.5 12 16.5C9.51472 16.5 7.5 14.4853 7.5 12Z"
+            ></path>
+          </svg>
+        </span>
+        <span id="hero-status-text">Connecting...</span>
       </div>
       <div class="flex items-center gap-3 pl-[14px] sm:pl-0">
-        <div tabindex="0" class="relative group/location inline-block focus:outline-none">
+        <div
+          tabindex="0"
+          class="relative group/location inline-block focus:outline-none"
+        >
           <span
             class="text-[9px] font-pixel text-text-muted uppercase tracking-wider cursor-help border-b border-dashed border-text-muted/50 pb-[1px] hover:text-primary transition-colors"
             >BLR, IN</span
@@ -120,7 +136,10 @@ const { class: className } = Astro.props;
 
         <span class="text-highlight-med/40">|</span>
 
-        <div tabindex="0" class="relative group/edu inline-block focus:outline-none">
+        <div
+          tabindex="0"
+          class="relative group/edu inline-block focus:outline-none"
+        >
           <span
             class="text-[9px] font-pixel text-text-muted uppercase tracking-wider cursor-help border-b border-dashed border-text-muted/50 pb-[1px] hover:text-primary transition-colors"
             >CSE-AI &apos;28</span
@@ -147,7 +166,7 @@ const { class: className } = Astro.props;
                 </svg>
                 <span
                   class="text-[10px] font-pixel text-text-primary uppercase tracking-wide z-50 text-center leading-[1.4]"
-                  >Amrita Vishwa<br/>Vidyapeetham</span
+                  >Amrita Vishwa<br />Vidyapeetham</span
                 >
               </div>
             </div>
@@ -201,10 +220,45 @@ const { class: className } = Astro.props;
       }
     }
 
+    async function updateDiscordStatus() {
+      const el = document.getElementById("hero-status-text");
+      const iconContainer = document.getElementById("hero-status-icon");
+      if (!el || !iconContainer) return;
+      try {
+        const res = await fetch(
+          "https://api.lanyard.rest/v1/users/736465046317563915",
+        );
+        const { data } = await res.json();
+        const status = data.discord_status;
+
+        const translateClass = "-translate-y-[1px]";
+        let svg = "";
+
+        if (status === "online") {
+          el.textContent = "Online";
+          svg = `<svg class="w-2.5 h-2.5 text-[#23a559] fill-current ${translateClass}" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" /></svg>`;
+        } else if (status === "idle") {
+          el.textContent = "Idle";
+          svg = `<svg class="w-2.5 h-2.5 text-[#f0b232] fill-current ${translateClass}" viewBox="0 0 24 24"><path d="M21.026 13.063c-5.097-.487-9.273-4.705-9.273-9.672 0-1.04.206-2.04.58-2.966C6.442.924 2 5.923 2 12c0 5.523 4.477 10 10 10 4.13 0 7.674-2.507 9.176-6.046a9.957 9.957 0 0 1-.15-2.89Z" /></svg>`;
+        } else if (status === "dnd") {
+          el.textContent = "Do Not Disturb";
+          svg = `<svg class="w-2.5 h-2.5 text-[#f23f43] fill-current ${translateClass}" viewBox="0 0 24 24"><path fill-rule="evenodd" clip-rule="evenodd" d="M12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2ZM6.25 12C6.25 11.5858 6.58579 11.25 7 11.25H17C17.4142 11.25 17.75 11.5858 17.75 12C17.75 12.4142 17.4142 12.75 17 12.75H7C6.58579 12.75 6.25 12.4142 6.25 12Z" /></svg>`;
+        } else {
+          el.textContent = "Offline";
+          svg = `<svg class="w-2.5 h-2.5 text-text-muted fill-current ${translateClass}" viewBox="0 0 24 24"><path fill-rule="evenodd" clip-rule="evenodd" d="M12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2ZM7.5 12C7.5 9.51472 9.51472 7.5 12 7.5C14.4853 7.5 16.5 9.51472 16.5 12C16.5 14.4853 14.4853 16.5 12 16.5C9.51472 16.5 7.5 14.4853 7.5 12Z" /></svg>`;
+        }
+        iconContainer.innerHTML = svg;
+      } catch (err) {
+        console.error("Failed to fetch Discord status:", err);
+      }
+    }
+
     updateHeroClock();
     updateWeather();
+    updateDiscordStatus();
     setInterval(updateHeroClock, 1000);
     setInterval(updateWeather, 3600000); // 1 hour
+    setInterval(updateDiscordStatus, 30000); // 30 seconds
 
     // Scramble Text Logic for "Chimera"
     const titleEl = document.getElementById("hero-title");
