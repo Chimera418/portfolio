@@ -53,8 +53,36 @@ const {
       rel="stylesheet"
     />
 
-    <!-- Preload media assets for 404 and music player -->
+    <!-- Warm the browser cache with 404 media on first visit, so if the visitor -->
+    <!-- ever lands on the 404 page, the video/audio are already cached and play instantly. -->
+    <script is:inline>
+      (function () {
+        if (localStorage.getItem("warmed404Media")) return;
 
+        var conn = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
+        if (conn && (conn.saveData || /^(slow-2g|2g)$/.test(conn.effectiveType || ""))) return;
+
+        var warm = function () {
+          ["/video/never-gonna-meow-you-up.mp4", "/audio/voice-of-no-return.opus"].forEach(function (href) {
+            var link = document.createElement("link");
+            link.rel = "prefetch";
+            link.href = href;
+            document.head.appendChild(link);
+          });
+          localStorage.setItem("warmed404Media", "true");
+        };
+
+        if ("requestIdleCallback" in window) {
+          window.addEventListener("load", function () {
+            requestIdleCallback(warm, { timeout: 5000 });
+          });
+        } else {
+          window.addEventListener("load", function () {
+            setTimeout(warm, 2000);
+          });
+        }
+      })();
+    </script>
 
     <!-- Initialize Theme Script -->
     <script is:inline>
