@@ -45,6 +45,7 @@
 	let LETTER_FILL = "rgba(255, 255, 255, 0.7)";
 	let LETTER_GREEN = "rgba(74, 222, 128, 0.95)"; // the target letter when the aim is on it
 	let BALL_FILL = "#e5e5e5";
+	let BALL_HIGHLIGHT = "#ffffff"; // specular highlight on the ball's gradient
 	let TRAJECTORY_RGB = "255, 70, 70";
 	let TRAJECTORY_GREEN = "74, 222, 128"; // preview + slot go green when the shot lands on target
 	let TRAJECTORY_ALPHA = 0.95;

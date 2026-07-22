@@ -8,8 +8,12 @@ export const TANGENT_KEEP = 0.99; // slightly more slide for fluid motion
 export const MAX_SUBSTEPS = 16; // anti-tunnelling cap (covers fast balls and a fast-dragged rail)
 // Fixed simulation step. Stepping at a constant dt (rather than the variable
 // frame time) makes the sim frame-rate independent AND repeatable, so the
-// trajectory preview matches the real ball through every bounce.
-export const FIXED_DT = 1 / 120; // doubled sub-step rate for smoother motion
+// trajectory preview matches the real ball through every bounce. Visual
+// smoothness comes from render-time interpolation between steps (see
+// ball.prevPos in scene.svelte), not from a tiny step — halving this doubles
+// the cost of every consumer (the sim, and both ghost-ball predictors), so
+// keep it as large as the collision fidelity allows.
+export const FIXED_DT = 1 / 60;
 
 export const BALL_RADIUS = 10;
 // Hard cap on simultaneous balls, used by the post-win free-play sandbox. The
