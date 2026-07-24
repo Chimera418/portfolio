@@ -1,33 +1,33 @@
 ---
 // Game2048.astro
 ---
-<div class="w-full h-full flex flex-col items-center justify-center bg-surface p-4 relative touch-none" style="touch-action: none;" id="game2048-container">
-  <button id="game2048-restart-btn" class="absolute top-4 right-4 p-2 bg-surface hover:bg-highlight-med rounded-full border border-highlight-med transition-colors z-20 text-primary" title="Restart Game">
+<div class="w-full h-full flex flex-col items-center justify-center bg-surface p-2 sm:p-4 relative touch-none" style="touch-action: none;" id="game2048-container">
+  <div class="mb-2 flex items-center justify-between w-full max-w-[400px]">
+    <div class="flex flex-col">
+      <div class="font-pixel text-primary text-xl">2048</div>
+      <div class="font-pixel text-text-muted text-[10px]">Join the numbers!</div>
+    </div>
+    <div class="flex gap-2 items-center">
+      <div class="bg-overlay p-1 sm:p-2 rounded border border-highlight-med text-center min-w-[60px] sm:min-w-[70px]">
+        <div class="font-pixel text-text-muted text-[8px] sm:text-[10px]">SCORE</div>
+        <div class="font-pixel text-primary text-xs sm:text-sm" id="game2048-score">0</div>
+      </div>
+      <div class="bg-overlay p-1 sm:p-2 rounded border border-highlight-med text-center min-w-[60px] sm:min-w-[70px]">
+        <div class="font-pixel text-text-muted text-[8px] sm:text-[10px]">BEST</div>
+        <div class="font-pixel text-primary text-xs sm:text-sm" id="game2048-best">0</div>
+      </div>
+    </div>
+  </div>
+
+  <button id="game2048-restart-btn" class="absolute top-2 sm:top-4 right-2 sm:right-4 p-2 bg-surface hover:bg-highlight-med rounded-full border border-highlight-med transition-colors text-primary" title="Restart Game">
     <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
       <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path>
       <path d="M3 3v5h5"></path>
     </svg>
   </button>
-  
-  <div class="mb-4 flex items-center justify-between w-full max-w-[400px] pr-8">
-    <div class="flex flex-col">
-      <div class="font-pixel text-primary text-xl">2048</div>
-      <div class="font-pixel text-text-muted text-[10px]">Join the numbers!</div>
-    </div>
-    <div class="flex gap-2">
-      <div class="bg-overlay p-2 rounded border border-highlight-med text-center min-w-[70px] sm:min-w-[80px]">
-        <div class="font-pixel text-text-muted text-[10px]">SCORE</div>
-        <div class="font-pixel text-primary text-sm" id="game2048-score">0</div>
-      </div>
-      <div class="bg-overlay p-2 rounded border border-highlight-med text-center min-w-[70px] sm:min-w-[80px]">
-        <div class="font-pixel text-text-muted text-[10px]">BEST</div>
-        <div class="font-pixel text-primary text-sm" id="game2048-best">0</div>
-      </div>
-    </div>
-  </div>
 
-  <div class="relative w-full max-w-[400px] bg-highlight-low rounded-lg p-3 touch-none">
-    <div style="padding-bottom: 100%;"></div>
+  <div class="flex-1 min-h-0 w-full flex flex-col items-center justify-center relative">
+    <div class="relative w-full max-w-[400px] bg-highlight-low rounded-lg p-3 touch-none mx-auto" style="aspect-ratio: 1/1; max-height: 100%;">
     <!-- Grid Background -->
     <div class="absolute inset-3 grid grid-cols-4 grid-rows-4 gap-3">
       {Array.from({length: 16}).map(() => (
@@ -46,8 +46,62 @@
       </button>
     </div>
   </div>
+  </div>
 
-  <div class="mt-6 text-center">
+  <div class="mt-2 flex gap-3 bg-highlight-low p-2 rounded-2xl border border-highlight-med shrink-0 z-20">
+    <div class="relative group">
+      <button id="game2048-undo-btn" class="p-3 bg-surface hover:bg-highlight-med rounded-lg border border-highlight-med transition-colors text-primary disabled:opacity-50 disabled:cursor-not-allowed">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M3 7v6h6"></path>
+          <path d="M21 17a9 9 0 0 0-9-9 9 9 0 0 0-6 2.3L3 13"></path>
+        </svg>
+        <div class="flex gap-1 justify-center mt-2 h-1" id="game2048-undo-uses">
+        </div>
+      </button>
+      <div class="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-max max-w-[200px] bg-[#4B4941] text-white text-xs p-3 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-30 shadow-lg border border-highlight-med">
+        <div class="font-bold mb-1 text-white">UNDO <span class="font-normal text-[#D2C8BA]" id="game2048-undo-tooltip-uses">2 uses left</span></div>
+        <div class="text-[#A3E6FF] font-medium">Make a 128 tile to get more uses</div>
+      </div>
+    </div>
+    
+    <div class="relative group">
+      <button id="game2048-swap-btn" class="p-3 bg-surface hover:bg-highlight-med rounded-lg border border-highlight-med transition-colors text-primary disabled:opacity-50 disabled:cursor-not-allowed">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M8 8l-4 4 4 4"></path>
+          <path d="M16 8h-3a3 3 0 0 0-3 3v2"></path>
+          <path d="M16 16l4-4-4-4"></path>
+          <path d="M8 16h3a3 3 0 0 0 3-3v-2"></path>
+        </svg>
+        <div class="flex gap-1 justify-center mt-2 h-1" id="game2048-swap-uses">
+        </div>
+      </button>
+      <div class="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-max max-w-[200px] bg-[#4B4941] text-white text-xs p-3 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-30 shadow-lg border border-highlight-med">
+        <div class="font-bold mb-1 text-white">SWAP TWO TILES <span class="font-normal text-[#D2C8BA]" id="game2048-swap-tooltip-uses">1 use left</span></div>
+        <div class="text-[#A3E6FF] font-medium">Make a 256 tile to get more uses</div>
+      </div>
+    </div>
+
+    <div class="relative group">
+      <button id="game2048-delete-btn" class="p-3 bg-surface hover:bg-highlight-med rounded-lg border border-highlight-med transition-colors text-primary disabled:opacity-50 disabled:cursor-not-allowed">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="4" y="4" width="6" height="6" rx="1"></rect>
+          <rect x="14" y="4" width="6" height="6" rx="1"></rect>
+          <rect x="14" y="14" width="6" height="6" rx="1"></rect>
+          <rect x="4" y="14" width="6" height="6" rx="1" fill="none" stroke-dasharray="2 2"></rect>
+        </svg>
+        <div class="flex gap-1 justify-center mt-2 h-1" id="game2048-delete-uses">
+        </div>
+      </button>
+      <div class="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-max max-w-[200px] bg-[#4B4941] text-white text-xs p-3 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-30 shadow-lg border border-highlight-med">
+        <div class="font-bold mb-1 text-white">DELETE TILES BY NUMBER <span class="font-normal text-[#D2C8BA]" id="game2048-delete-tooltip-uses">0 uses left</span></div>
+        <div class="text-[#A3E6FF] font-medium">Make a 512 tile to get more uses</div>
+      </div>
+    </div>
+  </div>
+
+  </div>
+
+  <div class="mt-2 text-center shrink-0">
     <p class="font-pixel text-[10px] text-text-muted uppercase tracking-widest">Arrows/WASD or Swipe to Move</p>
   </div>
 </div>
@@ -99,6 +153,23 @@
   .tile-1024 { background: #8ec07c; color: #fbf1c7; font-size: 1.2rem; box-shadow: 0 0 25px rgba(142,192,124,0.8); }
   .tile-2048 { background: #8ec07c; color: #fbf1c7; font-size: 1.2rem; box-shadow: 0 0 30px rgba(142,192,124,1); }
   .tile-super { background: #d3869b; color: #fbf1c7; font-size: 1rem; box-shadow: 0 0 30px rgba(211,134,155,1); }
+
+  .tile-selectable {
+    cursor: pointer;
+    box-shadow: 0 0 0 4px #b8bb26 inset !important;
+    animation: pulse-selectable 1.5s infinite;
+    z-index: 20;
+    pointer-events: auto !important;
+  }
+  .tile-selected {
+    box-shadow: 0 0 0 6px #fb4934 inset !important;
+    z-index: 25;
+  }
+  @keyframes pulse-selectable {
+    0% { transform: scale(1); }
+    50% { transform: scale(0.95); }
+    100% { transform: scale(1); }
+  }
 </style>
 
 <script>
@@ -111,18 +182,77 @@
   const retryBtn = document.getElementById('game2048-retry-btn');
   const restartBtn = document.getElementById('game2048-restart-btn');
 
+  // Powerups UI
+  const undoBtn = document.getElementById('game2048-undo-btn') as HTMLButtonElement;
+  const swapBtn = document.getElementById('game2048-swap-btn') as HTMLButtonElement;
+  const deleteBtn = document.getElementById('game2048-delete-btn') as HTMLButtonElement;
+
   if (container && tilesContainer && scoreEl && bestEl && overlay && messageEl && retryBtn) {
     let grid: number[][] = [];
     let score = 0;
     let bestScore = parseInt(localStorage.getItem('2048_best') || '0');
     bestEl.textContent = bestScore.toString();
     
+    // Powerups State
+    let undoUses = 2;
+    let swapUses = 1;
+    let deleteUses = 0;
+    const MAX_USES = 3;
+    
+    let gridHistory: {grid: number[][], score: number}[] = [];
+    let swapMode = false;
+    let deleteMode = false;
+    let swapSelection: {r: number, c: number, el: HTMLElement, val: number}[] = [];
+
     let isGameOver = false;
     let isGameWon = false;
     let keepPlaying = false; // After winning
     let isAnimating = false; // Block input during CSS transitions
     let gameSessionId = 0; // Prevent ghost tiles from late animations
     let gridElements: Record<string, HTMLElement> = {}; // track DOM elements by id
+
+    function updatePowerupUI() {
+      if(!undoBtn || !swapBtn || !deleteBtn) return;
+      
+      const renderUses = (containerId: string, uses: number) => {
+        const c = document.getElementById(containerId);
+        if(!c) return;
+        c.innerHTML = '';
+        for(let i=0; i<MAX_USES; i++) {
+          const bar = document.createElement('div');
+          bar.className = `w-4 h-1 rounded-full ${i < uses ? 'bg-primary' : 'bg-highlight-med/50'}`;
+          c.appendChild(bar);
+        }
+      }
+      
+      renderUses('game2048-undo-uses', undoUses);
+      renderUses('game2048-swap-uses', swapUses);
+      renderUses('game2048-delete-uses', deleteUses);
+      
+      const uTooltip = document.getElementById('game2048-undo-tooltip-uses');
+      const sTooltip = document.getElementById('game2048-swap-tooltip-uses');
+      const dTooltip = document.getElementById('game2048-delete-tooltip-uses');
+      
+      if(uTooltip) uTooltip.textContent = `${undoUses} use${undoUses !== 1 ? 's' : ''} left`;
+      if(sTooltip) sTooltip.textContent = `${swapUses} use${swapUses !== 1 ? 's' : ''} left`;
+      if(dTooltip) dTooltip.textContent = `${deleteUses} use${deleteUses !== 1 ? 's' : ''} left`;
+      
+      undoBtn.disabled = undoUses <= 0 || gridHistory.length === 0 || swapMode || deleteMode || isGameOver;
+      swapBtn.disabled = swapUses <= 0 || deleteMode || isGameOver;
+      deleteBtn.disabled = deleteUses <= 0 || swapMode || isGameOver;
+      
+      if (swapMode) {
+        swapBtn.classList.add('bg-highlight-med', 'ring-2', 'ring-primary');
+      } else {
+        swapBtn.classList.remove('bg-highlight-med', 'ring-2', 'ring-primary');
+      }
+      
+      if (deleteMode) {
+        deleteBtn.classList.add('bg-highlight-med', 'ring-2', 'ring-primary');
+      } else {
+        deleteBtn.classList.remove('bg-highlight-med', 'ring-2', 'ring-primary');
+      }
+    }
 
     /** Position a tile element at grid coords (r, c) */
     function positionTile(el: HTMLElement, r: number, c: number) {
@@ -148,8 +278,18 @@
       isAnimating = false;
       gameSessionId++;
       
+      undoUses = 2;
+      swapUses = 1;
+      deleteUses = 0;
+      gridHistory = [];
+      swapMode = false;
+      deleteMode = false;
+      swapSelection = [];
+      
       tilesContainer.innerHTML = '';
       gridElements = {};
+      
+      updatePowerupUI();
     }
 
     function startGame() {
@@ -195,53 +335,22 @@
       }
     }
 
-    // Move logic
-    // We'll return an array of movement instructions to render smoothly
     function move(direction: string) {
-      if (isGameOver || isAnimating) return;
+      if (isGameOver || isAnimating || swapMode || deleteMode) return;
       isAnimating = true;
       
       let moved = false;
+      
+      // Save state before move
+      gridHistory.push({
+        grid: JSON.parse(JSON.stringify(grid)),
+        score: score
+      });
+      if (gridHistory.length > 50) gridHistory.shift();
+
       let newGrid = JSON.parse(JSON.stringify(grid));
-      let merges: {r: number, c: number}[] = [];
       
       // Store current elements mapping to animate them
-      let moves: {fromR: number, fromC: number, toR: number, toC: number, val: number, merged: boolean}[] = [];
-
-      const transpose = (matrix: number[][]) => matrix[0].map((_, i) => matrix.map(row => row[i]));
-      const reverse = (matrix: number[][]) => matrix.map(row => [...row].reverse());
-
-      let tempGrid = [...newGrid];
-      
-      if (direction === 'up' || direction === 'down') {
-        tempGrid = transpose(tempGrid);
-      }
-      if (direction === 'right' || direction === 'down') {
-        tempGrid = reverse(tempGrid);
-      }
-
-      // Process each row
-      for (let r = 0; r < 4; r++) {
-        let row = tempGrid[r];
-        let newRow = row.filter(val => val !== 0); // remove zeros
-        let mergeRow = [];
-        
-        // mapping original index to new index is tricky.
-        // Let's do it simpler: just process the board and re-render everything
-        // For smooth transitions, we really need to track IDs.
-        // Instead, let's just do logic and re-render. CSS transitions on absolute positions handle some of it.
-        // But we need stable DOM elements for CSS transitions to work.
-        
-        // We'll write a more careful move algorithm
-        // We will process row by row
-      }
-      
-      // Simpler approach for DOM elements:
-      // Since it's a bit complex to track every element ID for merges in vanilla JS quickly,
-      // let's do the logic on the grid, and then clear and re-render. 
-      // It won't have the slide animation for merging perfectly, but it will work.
-      // Wait, the prompt says "CSS transform slide animations". So we SHOULD track them.
-
       let currentElements = {...gridElements};
       let nextElements: Record<string, any[]> = {};
       gridElements = {}; // Reset for the new state
@@ -250,7 +359,6 @@
       // returns { newArray, moves: [{from, to, val, merged}] }
       function processLine(line: number[]) {
         let arr = [];
-        let map = []; // tracks where original indices went
         for(let i=0; i<4; i++) {
           if (line[i] !== 0) arr.push({val: line[i], orig: i});
         }
@@ -263,6 +371,12 @@
           if (i < arr.length - 1 && arr[i].val === arr[i+1].val) {
             res[j] = arr[i].val * 2;
             score += res[j];
+            
+            // Check for powerups
+            if (res[j] === 128) undoUses = Math.min(MAX_USES, undoUses + 1);
+            if (res[j] === 256) swapUses = Math.min(MAX_USES, swapUses + 1);
+            if (res[j] === 512) deleteUses = Math.min(MAX_USES, deleteUses + 1);
+
             moveMap.push({orig: arr[i].orig, to: j, mergedVal: res[j]});
             moveMap.push({orig: arr[i+1].orig, to: j, mergedVal: res[j]});
             i++; // skip next
@@ -345,17 +459,23 @@
         }
       }
 
+      if (!moved) {
+        gridHistory.pop();
+      }
+
       if (moved) {
+        let currentSessionId = gameSessionId;
+
         // Apply transitions
         for (let key in nextElements) {
           let [r, c] = key.split('-').map(Number);
           let items = nextElements[key];
-          
+
           items.forEach((item: any) => {
             let el = item.el as HTMLElement;
             // Slide tile to new position
             positionTile(el, r, c);
-            
+
             if (items.length > 1) {
               // Part of a merge — remove after slide completes
               setTimeout(() => {
@@ -366,7 +486,7 @@
               gridElements[key] = el;
             }
           });
-          
+
           // Spawn merged tile
           if (items.length > 1) {
             let val = grid[r][c];
@@ -380,7 +500,7 @@
               gridElements[key] = el;
               tilesContainer.appendChild(el);
             }, 150);
-            
+
             if (val === 2048 && !isGameWon && !keepPlaying) {
               setTimeout(() => {
                 isGameWon = true;
@@ -391,10 +511,9 @@
             }
           }
         }
-        
+
         updateScore();
-        
-        let currentSessionId = gameSessionId;
+        updatePowerupUI();
         
         // Add new tile after animation delay
         setTimeout(() => {
@@ -402,6 +521,7 @@
           addRandomTile();
           checkGameOver();
           isAnimating = false;
+          updatePowerupUI();
         }, 160);
       } else {
         // Reset element tracking if didn't move
@@ -432,6 +552,7 @@
       messageEl.textContent = 'Game Over!';
       retryBtn.textContent = 'Try Again';
       overlay.classList.remove('hidden');
+      updatePowerupUI();
     }
 
     function render() {
@@ -445,20 +566,116 @@
             let displayVal = val > 2048 ? 'super' : val;
             el.className = `tile tile-${displayVal}`;
             el.textContent = val.toString();
-            el.style.width  = 'calc((100% - 36px) / 4)';
-            el.style.height = 'calc((100% - 36px) / 4)';
-            el.style.left   = `calc(${c} * ((100% - 36px) / 4 + 12px))`;
-            el.style.top    = `calc(${r} * ((100% - 36px) / 4 + 12px))`;
+            positionTile(el, r, c);
+            
+            if (swapMode || deleteMode) {
+              el.classList.add('tile-selectable');
+            }
+            
+            el.addEventListener('click', () => {
+              if (swapMode) {
+                const existingIndex = swapSelection.findIndex(s => s.r === r && s.c === c);
+                if (existingIndex > -1) {
+                  // Deselect
+                  el.classList.remove('tile-selected');
+                  swapSelection.splice(existingIndex, 1);
+                } else {
+                  if (swapSelection.length < 2) {
+                    el.classList.add('tile-selected');
+                    swapSelection.push({r, c, el, val: grid[r][c]});
+                    if (swapSelection.length === 2) {
+                      // Execute swap
+                      const t1 = swapSelection[0];
+                      const t2 = swapSelection[1];
+                      grid[t1.r][t1.c] = t2.val;
+                      grid[t2.r][t2.c] = t1.val;
+                      swapUses--;
+                      swapMode = false;
+                      swapSelection = [];
+                      // Ensure a state save after swap so you can't undo it directly? Or maybe we can undo it? 
+                      // For now, let's just save state before swap so undo works.
+                      gridHistory.push({
+                        grid: JSON.parse(JSON.stringify(grid)),
+                        score: score
+                      });
+                      render();
+                    }
+                  }
+                }
+              } else if (deleteMode) {
+                // Save state before delete so undo works
+                gridHistory.push({
+                  grid: JSON.parse(JSON.stringify(grid)),
+                  score: score
+                });
+                const valToDelete = grid[r][c];
+                for (let ir = 0; ir < 4; ir++) {
+                  for (let ic = 0; ic < 4; ic++) {
+                    if (grid[ir][ic] === valToDelete) {
+                      grid[ir][ic] = 0;
+                    }
+                  }
+                }
+                deleteUses--;
+                deleteMode = false;
+                render();
+              }
+            });
+
             gridElements[`${r}-${c}`] = el;
             tilesContainer.appendChild(el);
           }
         }
       }
+      updatePowerupUI();
+    }
+
+    // Powerup Button Listeners
+    if (undoBtn) {
+      undoBtn.addEventListener('click', () => {
+        if (undoUses > 0 && gridHistory.length > 0 && !swapMode && !deleteMode && !isGameOver && !isAnimating) {
+          const lastState = gridHistory.pop();
+          if (lastState) {
+            grid = lastState.grid;
+            score = lastState.score;
+            undoUses--;
+            updateScore();
+            render();
+          }
+        }
+      });
+    }
+
+    if (swapBtn) {
+      swapBtn.addEventListener('click', () => {
+        if (swapUses > 0 && !isGameOver && !isAnimating && !deleteMode) {
+          if (swapMode) {
+            swapMode = false;
+            swapSelection = [];
+          } else {
+            swapMode = true;
+          }
+          render();
+        }
+      });
+    }
+
+    if (deleteBtn) {
+      deleteBtn.addEventListener('click', () => {
+        if (deleteUses > 0 && !isGameOver && !isAnimating && !swapMode) {
+          if (deleteMode) {
+            deleteMode = false;
+          } else {
+            deleteMode = true;
+          }
+          render();
+        }
+      });
     }
 
     // Controls
     document.addEventListener('keydown', (e) => {
-      if (isGameOver) return;
+      if (isGameOver || swapMode || deleteMode) return;
       if (isGameWon && !keepPlaying) return; // overlay is showing
       
       const gameContainer = document.getElementById('game-content-2048');
@@ -484,8 +701,11 @@
       const gameContainer = document.getElementById('game-content-2048');
       if (!gameContainer || gameContainer.classList.contains('hidden')) return;
       
-      // Allow button clicks
-      if (e.target && (e.target as HTMLElement).closest && (e.target as HTMLElement).closest('button')) return;
+      // Allow button and tile clicks
+      if (e.target && (e.target as HTMLElement).closest) {
+        if ((e.target as HTMLElement).closest('button')) return;
+        if ((e.target as HTMLElement).closest('.tile-selectable')) return;
+      }
       
       touchStartX = e.touches[0].clientX;
       touchStartY = e.touches[0].clientY;
@@ -495,7 +715,10 @@
     container.addEventListener('touchmove', (e) => {
       const gameContainer = document.getElementById('game-content-2048');
       if (!gameContainer || gameContainer.classList.contains('hidden')) return;
-      if (e.target && (e.target as HTMLElement).closest && (e.target as HTMLElement).closest('button')) return;
+      if (e.target && (e.target as HTMLElement).closest) {
+        if ((e.target as HTMLElement).closest('button')) return;
+        if ((e.target as HTMLElement).closest('.tile-selectable')) return;
+      }
       if (e.cancelable) e.preventDefault(); // Prevent scroll to avoid touch cancellation
     }, {passive: false});
 
@@ -503,7 +726,7 @@
       const gameContainer = document.getElementById('game-content-2048');
       if (!gameContainer || gameContainer.classList.contains('hidden')) return;
       if (e.target && (e.target as HTMLElement).closest && (e.target as HTMLElement).closest('button')) return;
-      if (isGameOver || (isGameWon && !keepPlaying)) return;
+      if (isGameOver || (isGameWon && !keepPlaying) || swapMode || deleteMode) return;
 
       if (!e.changedTouches || e.changedTouches.length === 0) return;
       
