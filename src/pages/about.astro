@@ -332,41 +332,46 @@ const facts = [
 </style>
 
 <script>
-  let io: IntersectionObserver | undefined;
+  // Scroll-reveal via a rAF loop reading getBoundingClientRect. This site uses
+  // smooth-scroll (Lenis), which makes IntersectionObserver and native "scroll"
+  // events unreliable — polling each rendered frame is robust regardless of how
+  // scrolling happens, and stops itself once everything is revealed.
+  let rafId = 0;
 
-  function setupReveal() {
+  function initReveal() {
+    const root = document.documentElement;
+
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
-      document.documentElement.classList.remove("reveal-on");
+      root.classList.remove("reveal-on");
       return;
     }
-    document.documentElement.classList.add("reveal-on");
+    root.classList.add("reveal-on");
 
-    if (!io) {
-      io = new IntersectionObserver(
-        (entries) => {
-          for (const entry of entries) {
-            if (entry.isIntersecting) {
-              entry.target.classList.add("is-visible");
-              io!.unobserve(entry.target);
-            }
-          }
-        },
-        { threshold: 0.1, rootMargin: "0px 0px -6% 0px" },
+    if (rafId) cancelAnimationFrame(rafId);
+
+    const loop = () => {
+      const trigger = window.innerHeight * 0.9;
+      const pending = document.querySelectorAll<HTMLElement>(
+        ".reveal:not(.is-visible)",
       );
-    }
-
-    const vh = window.innerHeight;
-    document.querySelectorAll(".reveal:not(.is-visible)").forEach((el) => {
-      // Anything already in view or scrolled past reveals immediately;
-      // only below-the-fold items wait for the scroll animation.
-      if (el.getBoundingClientRect().top < vh * 0.95) {
-        el.classList.add("is-visible");
-      } else {
-        io!.observe(el);
+      for (const el of pending) {
+        if (el.getBoundingClientRect().top < trigger) {
+          el.classList.add("is-visible");
+        }
       }
-    });
+      // Keep polling only while something is still waiting to be revealed.
+      if (
+        document.querySelectorAll(".reveal:not(.is-visible)").length > 0
+      ) {
+        rafId = requestAnimationFrame(loop);
+      } else {
+        rafId = 0;
+      }
+    };
+
+    loop();
   }
 
-  setupReveal();
-  document.addEventListener("astro:page-load", setupReveal);
+  initReveal();
+  document.addEventListener("astro:page-load", initReveal);
 </script>
