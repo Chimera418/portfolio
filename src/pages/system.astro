@@ -534,8 +534,7 @@ You can run classic games in the GAMES folder, or use the Terminal to navigate t
           bringToFront(win);
           
           const rect = win.getBoundingClientRect();
-          const parentRect = win.parentElement.getBoundingClientRect();
-          
+
           // These coordinates are relative to the screen, which works well enough
           // even with transforms if we calculate carefully.
           offsetX = e.clientX - rect.left;
@@ -564,7 +563,6 @@ You can run classic games in the GAMES folder, or use the Terminal to navigate t
 
       // 3. Game Launching Logic
       window.launchGame = function(gameId) {
-        const runner = document.getElementById('window-game-runner');
         const title = document.getElementById('game-title');
         
         // Hide all instances
@@ -604,8 +602,6 @@ You can run classic games in the GAMES folder, or use the Terminal to navigate t
       const container = document.getElementById("terminal-container");
       const promptPrefix = document.getElementById("prompt-prefix");
 
-      let currentDir = "~";
-      let currentUser = "guest";
       const validRoutes = ["about", "projects", "devlog", "guestbook", "contact", "labs", "games"];
 
       const staticCommands = {

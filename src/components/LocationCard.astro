@@ -5,9 +5,12 @@ interface Props {
   class?: string;
 }
 const { class: className } = Astro.props;
+
+// CARTO now requires an API key on basemaps.cartocdn.com (public client-side key).
+const cartoKey = import.meta.env.PUBLIC_CARTO_API_KEY ?? "";
 ---
 
-<BentoCard title="Current Spawn Point" className={className} tag="LOC">
+<BentoCard title="Based In" className={className} tag="LOC">
   <div class="flex flex-col h-full gap-3 -mt-2">
     <!-- Map -->
     <div
@@ -47,9 +50,19 @@ const { class: className } = Astro.props;
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" is:inline
 ></script>
 
-<script is:inline>
+<style is:global>
+  /* Map is display-only — never show an interactive cursor on it. */
+  #location-map,
+  #location-map .leaflet-grab,
+  #location-map .leaflet-interactive,
+  #location-map .leaflet-marker-icon {
+    cursor: default !important;
+  }
+</style>
+
+<script is:inline define:vars={{ cartoKey }}>
   (function () {
-    // Leaflet dark map — Hyderabad coords
+    // Leaflet dark map — Bengaluru coords
     function initMap() {
       if (typeof L === "undefined") {
         setTimeout(initMap, 200);
@@ -69,22 +82,24 @@ const { class: className } = Astro.props;
         attributionControl: false,
       });
 
-      // Dark tile layer (CartoDB dark)
+      // Dark tile layer (CARTO dark). CARTO now requires an API key.
+      const keyParam = cartoKey ? `?key=${cartoKey}` : "";
       L.tileLayer(
-        "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png",
+        `https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png${keyParam}`,
         {
           maxZoom: 19,
+          subdomains: "abcd",
         },
       ).addTo(map);
 
-      // Pin marker
+      // Pin marker (non-interactive — it's a label, not a button)
       const icon = L.divIcon({
         html: '<div style="width:10px;height:10px;background:#eb6f92;border-radius:50%;box-shadow:0 0 8px #eb6f92;border:2px solid #fff;"></div>',
         iconSize: [10, 10],
         iconAnchor: [5, 5],
         className: "",
       });
-      L.marker([12.9716, 77.5946], { icon }).addTo(map);
+      L.marker([12.9716, 77.5946], { icon, interactive: false }).addTo(map);
       
       // Ensure the map is perfectly centered after initial render
       setTimeout(() => {

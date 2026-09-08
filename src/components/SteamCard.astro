@@ -9,7 +9,7 @@ const { class: className, style } = Astro.props;
 ---
 
 <BentoCard
-  title="I Can Explain"
+  title="Currently Playing"
   className={className}
   style={style}
   tag="LANYARD"
@@ -52,13 +52,14 @@ const { class: className, style } = Astro.props;
       </div>
     </div>
 
-    <!-- Bottom bar (dynamic link) -->
+    <!-- Bottom bar (dynamic link) + recent games button -->
+    <div class="flex items-center gap-2">
     <a
       id="ga-bottom-bar"
       href="#"
       target="_blank"
       rel="noopener noreferrer"
-      class="flex items-center justify-between gap-3 w-full px-4 py-2.5 rounded-lg border-2 border-highlight-med bg-overlay hover:bg-surface hover:border-[#66c0f4] transition-all duration-200 group pointer-events-none opacity-50"
+      class="flex flex-1 min-w-0 items-center justify-between gap-3 px-4 py-2.5 rounded-lg border-2 border-highlight-med bg-overlay hover:bg-surface hover:border-[#66c0f4] transition-all duration-200 group pointer-events-none opacity-50"
     >
       <div class="flex items-center gap-2 min-w-0">
         <!-- Steam icon -->
@@ -87,8 +88,60 @@ const { class: className, style } = Astro.props;
         <path d="M7 17L17 7M17 7H7M17 7v10"></path>
       </svg>
     </a>
+
+    <button
+      id="ga-recent-btn"
+      type="button"
+      aria-label="Show recently played games"
+      title="Recent games"
+      class="recent-btn flex-shrink-0 flex items-center justify-center w-10 h-10 rounded-lg border-2 bg-overlay text-[#66c0f4] hover:bg-surface transition-all duration-200"
+      style="--accent:#66c0f4; border-color: color-mix(in srgb, #66c0f4 45%, transparent);"
+    >
+      <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <line x1="8" y1="6" x2="21" y2="6"></line>
+        <line x1="8" y1="12" x2="21" y2="12"></line>
+        <line x1="8" y1="18" x2="21" y2="18"></line>
+        <line x1="3" y1="6" x2="3.01" y2="6"></line>
+        <line x1="3" y1="12" x2="3.01" y2="12"></line>
+        <line x1="3" y1="18" x2="3.01" y2="18"></line>
+      </svg>
+    </button>
+    </div>
   </div>
 </BentoCard>
+
+<!-- Recently played games modal -->
+<div
+  id="ga-modal"
+  class="fixed inset-0 z-[200] hidden items-center justify-center p-4"
+>
+  <div class="ga-modal-backdrop absolute inset-0 bg-black/70 backdrop-blur-sm"></div>
+  <div
+    class="relative z-10 w-full max-w-md bg-surface border-2 border-highlight-med rounded-xl shadow-2xl shadow-black/50 max-h-[80vh] flex flex-col overflow-hidden"
+  >
+    <div class="flex items-center justify-between px-4 py-3 border-b border-highlight-med">
+      <div class="flex items-center gap-2">
+        <svg class="w-4 h-4 text-[#66c0f4]" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M11.979 0C5.678 0 .511 4.86.022 11.037l6.432 2.658c.545-.371 1.203-.59 1.912-.59.063 0 .125.004.188.006l2.861-4.142V8.91c0-2.495 2.028-4.524 4.524-4.524 2.494 0 4.524 2.031 4.524 4.527s-2.03 4.525-4.524 4.525h-.105l-4.076 2.911c0 .052.004.105.004.159 0 1.875-1.515 3.396-3.39 3.396-1.635 0-3.016-1.173-3.331-2.727L.436 15.27C1.862 20.307 6.486 24 11.979 24c6.627 0 11.999-5.373 11.999-12S18.605 0 11.979 0z"></path>
+        </svg>
+        <h3 class="font-pixel text-[11px] uppercase tracking-widest text-text-primary">
+          Recently Played
+        </h3>
+      </div>
+      <button
+        class="ga-modal-close text-text-muted hover:text-text-primary transition-colors p-1 -mr-1"
+        aria-label="Close"
+      >
+        <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+      </button>
+    </div>
+    <div id="ga-list" class="overflow-y-auto p-2 flex-1">
+      <p class="text-text-muted text-sm text-center py-8 font-pixel text-[10px] uppercase tracking-widest animate-pulse">
+        Loading...
+      </p>
+    </div>
+  </div>
+</div>
 
 <style>
   @keyframes pixel-blink {
@@ -103,6 +156,10 @@ const { class: className, style } = Astro.props;
   }
   .pixel-blink {
     animation: pixel-blink 1s step-end infinite;
+  }
+  .recent-btn:hover {
+    border-color: var(--accent);
+    box-shadow: 0 0 12px color-mix(in srgb, var(--accent) 30%, transparent);
   }
 </style>
 
@@ -257,13 +314,13 @@ const { class: className, style } = Astro.props;
       if (dot) {
         dot.className =
           "w-1.5 h-1.5 rounded-full flex-shrink-0 -translate-y-[1px] pixel-blink";
-        dot.style.background = "var(--green)";
+        dot.style.background = "#66c0f4";
       }
 
       const label = $("ga-status-label");
       if (label) {
         label.textContent = "Playing Now";
-        label.style.color = "var(--green)";
+        label.style.color = "#66c0f4";
       }
 
       setBottomLink(game.name, game.application_id);
@@ -296,7 +353,7 @@ const { class: className, style } = Astro.props;
       const dot = $("ga-dot");
       if (dot) {
         dot.className =
-          "w-1.5 h-1.5 rounded-full bg-[#66c0f4] flex-shrink-0 -translate-y-[1px]";
+          "w-1.5 h-1.5 rounded-full bg-text-muted flex-shrink-0 -translate-y-[1px]";
         dot.style.background = "";
       }
 
@@ -304,7 +361,7 @@ const { class: className, style } = Astro.props;
       if (label) {
         label.textContent = "Last Played";
         label.className =
-          "font-pixel text-[9px] uppercase tracking-widest text-[#66c0f4]";
+          "font-pixel text-[9px] uppercase tracking-widest text-text-muted";
         label.style.color = "";
       }
 
@@ -381,6 +438,97 @@ const { class: className, style } = Astro.props;
         lastFetch = 0;
         poll();
       }
+    });
+
+    /* ── Recently played games modal ───────────────────────────────────── */
+    const gaModal = document.getElementById("ga-modal");
+    const gaOpenBtn = document.getElementById("ga-recent-btn");
+    const gaListEl = document.getElementById("ga-list");
+    let gaLoaded = false;
+
+    function gaEscape(str) {
+      return String(str ?? "").replace(
+        /[&<>"']/g,
+        (c) =>
+          ({
+            "&": "&amp;",
+            "<": "&lt;",
+            ">": "&gt;",
+            '"': "&quot;",
+            "'": "&#39;",
+          })[c],
+      );
+    }
+
+    function gaRenderList(games) {
+      if (!gaListEl) return;
+      if (!games || games.length === 0) {
+        gaListEl.innerHTML =
+          '<p class="text-text-muted text-sm text-center py-8 font-pixel text-[10px] uppercase tracking-widest leading-relaxed">No games tracked yet<br/><span class="text-[8px] opacity-70">(recently played games appear here over time)</span></p>';
+        return;
+      }
+      gaListEl.innerHTML = games
+        .map((g) => {
+          const cover = g.image
+            ? `<img src="${gaEscape(g.image)}" alt="" class="w-10 h-10 rounded object-cover flex-shrink-0 border border-highlight-med" onerror="this.style.display='none'">`
+            : `<div class="w-10 h-10 rounded bg-overlay border border-highlight-med flex-shrink-0"></div>`;
+          const sub = g.lastSeen ? relativeTime(g.lastSeen) : "";
+          return `
+            <a href="${gaEscape(g.url)}" target="_blank" rel="noopener"
+               class="flex items-center gap-3 px-2 py-2 rounded-lg hover:bg-overlay transition-colors group">
+              ${cover}
+              <div class="flex-1 min-w-0">
+                <p class="text-sm font-semibold text-text-primary truncate group-hover:text-[#66c0f4] transition-colors">${gaEscape(g.name)}</p>
+                <p class="text-[9px] font-pixel uppercase tracking-wider text-text-muted truncate">${gaEscape(sub)}</p>
+              </div>
+            </a>`;
+        })
+        .join("");
+    }
+
+    async function gaLoadRecent() {
+      if (!gaListEl) return;
+      try {
+        const res = await fetch("/api/steam-recent");
+        const data = await res.json();
+        gaRenderList(data.games);
+      } catch (err) {
+        console.error("Failed to load recent games:", err);
+        gaListEl.innerHTML =
+          '<p class="text-text-muted text-sm text-center py-8 font-pixel text-[10px] uppercase tracking-widest">Failed to load</p>';
+      }
+    }
+
+    function gaOpen() {
+      if (!gaModal) return;
+      gaModal.classList.remove("hidden");
+      gaModal.classList.add("flex");
+      document.body.style.overflow = "hidden";
+      if (!gaLoaded) {
+        gaLoaded = true;
+        gaLoadRecent();
+      }
+    }
+
+    function gaClose() {
+      if (!gaModal) return;
+      gaModal.classList.add("hidden");
+      gaModal.classList.remove("flex");
+      document.body.style.overflow = "";
+    }
+
+    if (gaOpenBtn) gaOpenBtn.addEventListener("click", gaOpen);
+    if (gaModal) {
+      gaModal
+        .querySelector(".ga-modal-backdrop")
+        ?.addEventListener("click", gaClose);
+      gaModal
+        .querySelector(".ga-modal-close")
+        ?.addEventListener("click", gaClose);
+    }
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Escape" && gaModal && !gaModal.classList.contains("hidden"))
+        gaClose();
     });
   })();
 </script>

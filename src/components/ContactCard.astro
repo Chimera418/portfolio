@@ -6,7 +6,18 @@ interface Props {
 }
 const { class: className } = Astro.props;
 
-const links = [
+interface ConnectLink {
+  name: string;
+  href: string;
+  hint: string;
+  color: string;
+  hoverBg: string;
+  icon: string;
+  discord?: boolean;
+  copy?: string;
+}
+
+const links: ConnectLink[] = [
   {
     name: 'GitHub',
     href: 'https://github.com/Chimera418',
@@ -38,6 +49,7 @@ const links = [
     hint: 'hello@chimera-realm.foo',
     color: '#eb6f92',
     hoverBg: 'rgba(235,111,146,0.1)',
+    copy: 'hello@chimera-realm.foo',
     icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" class="w-5 h-5 flex-shrink-0"><path d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>`,
   },
 ];
@@ -47,28 +59,46 @@ const links = [
   <!-- Invisible overlay link to /contact -->
   <a href="/contact" class="absolute inset-0 z-0" aria-label="Go to Contact Page"></a>
   
-  <div class="flex flex-col h-full justify-center gap-2 pt-1 relative z-10 pointer-events-none">
+  <div class="flex flex-col h-full justify-start gap-2 pt-2 relative z-10 pointer-events-none">
     {links.map(link => (
-      <a
-        href={link.href}
-        target="_blank" 
-        rel="noopener noreferrer"
-        data-discord={link.discord ? 'true' : undefined}
-        class="connect-link group flex items-center gap-3 px-3 py-2.5 rounded-xl border-2 border-transparent transition-all duration-200 hover:border-white/10 pointer-events-auto"
-        style={`--link-color: ${link.color}; --link-bg: ${link.hoverBg};`}
-      >
-        <!-- Icon -->
-        <div class="link-icon text-text-muted group-hover:text-[var(--link-color)] transition-colors duration-200" set:html={link.icon} />
+      <div class="relative" style={`--link-color: ${link.color};`}>
+        <a
+          href={link.href}
+          target="_blank"
+          rel="noopener noreferrer"
+          data-discord={link.discord ? 'true' : undefined}
+          class={`connect-link group flex items-center gap-3 px-3 py-2.5 rounded-xl border-2 border-transparent transition-all duration-200 hover:border-white/10 pointer-events-auto ${link.copy ? 'pr-12' : ''}`}
+          style={`--link-color: ${link.color}; --link-bg: ${link.hoverBg};`}
+        >
+          <!-- Icon -->
+          <div class="link-icon text-text-muted group-hover:text-[var(--link-color)] transition-colors duration-200" set:html={link.icon} />
 
-        <!-- Text -->
-        <div class="flex-1 min-w-0">
-          <p class="text-sm font-semibold text-text-primary group-hover:text-[var(--link-color)] transition-colors duration-200 leading-tight">{link.name}</p>
-          <p class="text-[10px] font-pixel text-text-muted leading-tight mt-0.5 truncate">{link.hint}</p>
-        </div>
+          <!-- Text -->
+          <div class="flex-1 min-w-0">
+            <p class="text-sm font-semibold text-text-primary group-hover:text-[var(--link-color)] transition-colors duration-200 leading-tight">{link.name}</p>
+            <p class="text-[10px] font-pixel text-text-muted leading-tight mt-0.5 truncate">{link.hint}</p>
+          </div>
 
-        <!-- Arrow -->
-        <svg class="w-4 h-4 text-text-muted group-hover:text-[var(--link-color)] group-hover:translate-x-0.5 transition-all duration-200 flex-shrink-0 opacity-0 group-hover:opacity-100" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
-      </a>
+          <!-- Arrow (hidden when a copy button is present) -->
+          {!link.copy && (
+            <svg class="w-4 h-4 text-text-muted group-hover:text-[var(--link-color)] group-hover:translate-x-0.5 transition-all duration-200 flex-shrink-0 opacity-0 group-hover:opacity-100" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+          )}
+        </a>
+
+        <!-- Copy-to-clipboard button (sibling of the anchor, not nested) -->
+        {link.copy && (
+          <button
+            type="button"
+            data-copy={link.copy}
+            aria-label={`Copy ${link.name.toLowerCase()} address`}
+            title="Copy to clipboard"
+            class="copy-btn absolute right-2.5 top-1/2 -translate-y-1/2 z-20 p-1.5 rounded-md text-text-muted hover:text-[var(--link-color)] hover:bg-white/5 transition-colors pointer-events-auto"
+          >
+            <svg class="copy-icon w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
+            <svg class="check-icon w-4 h-4 hidden text-primary" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M20 6L9 17l-5-5"/></svg>
+          </button>
+        )}
+      </div>
     ))}
   </div>
 </BentoCard>
@@ -80,6 +110,28 @@ const links = [
 </style>
 
 <script is:inline>
+  // Copy-to-clipboard buttons (e.g. email)
+  document.querySelectorAll('.copy-btn[data-copy]').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+
+      const value = btn.getAttribute('data-copy');
+      navigator.clipboard.writeText(value).catch(() => {});
+
+      const copyIcon = btn.querySelector('.copy-icon');
+      const checkIcon = btn.querySelector('.check-icon');
+      if (copyIcon && checkIcon) {
+        copyIcon.classList.add('hidden');
+        checkIcon.classList.remove('hidden');
+        setTimeout(() => {
+          copyIcon.classList.remove('hidden');
+          checkIcon.classList.add('hidden');
+        }, 1500);
+      }
+    });
+  });
+
   document.querySelectorAll('[data-discord="true"]').forEach(el => {
     el.addEventListener('click', (e) => {
       navigator.clipboard.writeText('gamingchimera').catch(() => {});

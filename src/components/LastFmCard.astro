@@ -1,0 +1,347 @@
+---
+import BentoCard from "./BentoCard.astro";
+
+interface Props {
+  class?: string;
+}
+const { class: className } = Astro.props;
+
+const ACCENT = "#d51007"; // Last.fm red
+
+// Official Last.fm logo path (simple-icons)
+const LASTFM_LOGO =
+  "M10.584 17.21l-.88-2.392s-1.43 1.594-3.573 1.594c-1.897 0-3.244-1.649-3.244-4.288 0-3.382 1.704-4.591 3.381-4.591 2.42 0 3.189 1.567 3.849 3.574l.88 2.749c.88 2.666 2.529 4.81 7.285 4.81 3.409 0 5.718-1.044 5.718-3.793 0-2.227-1.265-3.381-3.63-3.931l-1.758-.385c-1.21-.275-1.567-.77-1.567-1.595 0-.934.742-1.484 1.952-1.484 1.32 0 2.034.495 2.144 1.677l2.749-.33c-.22-2.474-1.924-3.492-4.729-3.492-2.474 0-4.893.935-4.893 3.932 0 1.87.907 3.051 3.189 3.601l1.87.44c1.402.33 1.869.907 1.869 1.704 0 1.017-.99 1.43-2.86 1.43-2.776 0-3.93-1.457-4.59-3.464l-.907-2.75c-1.155-3.573-2.997-4.893-6.653-4.893C2.144 5.333 0 7.89 0 12.233c0 4.18 2.144 6.434 5.993 6.434 3.106 0 4.591-1.457 4.591-1.457z";
+---
+
+<BentoCard title="Now Playing" className={className} tag="LASTFM_API">
+  <div class="flex flex-col justify-between h-full relative z-10 pt-1 gap-4">
+    <!-- Album art + track info -->
+    <div class="flex items-center gap-4">
+      <div
+        id="lastfm-image"
+        class="h-16 w-16 md:h-20 md:w-20 rounded-lg shadow-[2px_2px_0_rgba(0,0,0,0.5)] bg-overlay border border-highlight-med flex items-center justify-center text-xs text-text-muted font-pixel overflow-hidden flex-shrink-0"
+      >
+        <span class="animate-pulse">...</span>
+      </div>
+      <div class="flex-1 min-w-0 flex flex-col justify-center gap-1">
+        <h4
+          id="lastfm-track"
+          class="font-bold text-text-primary text-sm md:text-base truncate"
+        >
+          Connecting...
+        </h4>
+        <p
+          id="lastfm-artist"
+          class="text-text-muted text-xs md:text-sm truncate"
+        >
+          Establishing link to Last.fm
+        </p>
+        <!-- Status pill inline with track info -->
+        <div class="flex items-center gap-1.5 mt-0.5">
+          <span
+            id="lastfm-status-dot"
+            class="w-1.5 h-1.5 rounded-full bg-text-muted flex-shrink-0 -translate-y-[1px]"
+          ></span>
+          <span
+            id="lastfm-status-text"
+            class="font-pixel text-[9px] uppercase tracking-widest text-text-muted"
+            >Offline</span
+          >
+        </div>
+      </div>
+    </div>
+
+    <!-- CTA row: View on Last.fm + Recent tracks button -->
+    <div class="flex items-center gap-2">
+      <a
+        id="lastfm-link"
+        href="https://www.last.fm"
+        target="_blank"
+        rel="noopener"
+        class="flex flex-1 min-w-0 items-center justify-between gap-3 px-4 py-2.5 rounded-lg border-2 border-highlight-med bg-overlay hover:bg-surface transition-all duration-200 group"
+        style={`--accent: ${ACCENT};`}
+      >
+        <div class="flex items-center gap-2 min-w-0">
+          <svg
+            class="w-4 h-4 flex-shrink-0"
+            style={`color: ${ACCENT};`}
+            viewBox="0 0 24 24"
+            fill="currentColor"
+          >
+            <path d={LASTFM_LOGO}></path>
+          </svg>
+          <span
+            id="lastfm-listen-text"
+            class="font-pixel text-[10px] uppercase tracking-widest text-text-muted group-hover:text-[var(--accent)] transition-colors truncate"
+            >View on Last.fm</span
+          >
+        </div>
+        <svg
+          class="w-3.5 h-3.5 text-text-muted group-hover:text-[var(--accent)] group-hover:translate-x-0.5 transition-all flex-shrink-0"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2.5"
+        >
+          <path d="M7 17L17 7M17 7H7M17 7v10"></path>
+        </svg>
+      </a>
+
+      <button
+        id="lastfm-recent-btn"
+        type="button"
+        aria-label="Show recent tracks"
+        title="Recent tracks"
+        class="recent-btn flex-shrink-0 flex items-center justify-center w-10 h-10 rounded-lg border-2 bg-overlay text-[var(--accent)] hover:bg-surface transition-all duration-200"
+        style={`--accent: ${ACCENT}; border-color: color-mix(in srgb, ${ACCENT} 45%, transparent);`}
+      >
+        <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <line x1="8" y1="6" x2="21" y2="6"></line>
+          <line x1="8" y1="12" x2="21" y2="12"></line>
+          <line x1="8" y1="18" x2="21" y2="18"></line>
+          <line x1="3" y1="6" x2="3.01" y2="6"></line>
+          <line x1="3" y1="12" x2="3.01" y2="12"></line>
+          <line x1="3" y1="18" x2="3.01" y2="18"></line>
+        </svg>
+      </button>
+    </div>
+  </div>
+</BentoCard>
+
+<!-- Recent tracks modal -->
+<div
+  id="lastfm-modal"
+  class="fixed inset-0 z-[200] hidden items-center justify-center p-4"
+  style={`--accent: ${ACCENT};`}
+>
+  <div class="lastfm-modal-backdrop absolute inset-0 bg-black/70 backdrop-blur-sm"></div>
+  <div
+    class="relative z-10 w-full max-w-md bg-surface border-2 border-highlight-med rounded-xl shadow-2xl shadow-black/50 max-h-[80vh] flex flex-col overflow-hidden"
+  >
+    <div class="flex items-center justify-between px-4 py-3 border-b border-highlight-med">
+      <div class="flex items-center gap-2">
+        <svg class="w-4 h-4" style={`color: ${ACCENT};`} viewBox="0 0 24 24" fill="currentColor">
+          <path d={LASTFM_LOGO}></path>
+        </svg>
+        <h3 class="font-pixel text-[11px] uppercase tracking-widest text-text-primary">
+          Recent Tracks
+        </h3>
+      </div>
+      <button
+        class="lastfm-modal-close text-text-muted hover:text-text-primary transition-colors p-1 -mr-1"
+        aria-label="Close"
+      >
+        <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+      </button>
+    </div>
+    <div id="lastfm-list" class="overflow-y-auto p-2 flex-1">
+      <p class="text-text-muted text-sm text-center py-8 font-pixel text-[10px] uppercase tracking-widest animate-pulse">
+        Loading...
+      </p>
+    </div>
+  </div>
+</div>
+
+<style>
+  .recent-btn:hover {
+    border-color: var(--accent);
+    box-shadow: 0 0 12px color-mix(in srgb, var(--accent) 30%, transparent);
+  }
+</style>
+
+<script is:inline define:vars={{ ACCENT }}>
+  (function () {
+    let lastFetch = 0;
+    const FETCH_INTERVAL = 30000;
+
+    function updateCard(data) {
+      const imageEl = document.getElementById("lastfm-image");
+      const trackEl = document.getElementById("lastfm-track");
+      const artistEl = document.getElementById("lastfm-artist");
+      const statusDot = document.getElementById("lastfm-status-dot");
+      const statusText = document.getElementById("lastfm-status-text");
+      const linkEl = document.getElementById("lastfm-link");
+
+      if (!data || !data.track) {
+        if (trackEl) trackEl.textContent = "System Idle";
+        if (artistEl) artistEl.textContent = "No recent scrobbles";
+        if (imageEl)
+          imageEl.innerHTML =
+            '<span class="text-text-muted font-pixel text-[10px]">IDLE</span>';
+        if (statusDot)
+          statusDot.className =
+            "w-1.5 h-1.5 rounded-full bg-text-muted flex-shrink-0 -translate-y-[1px]";
+        if (statusText) {
+          statusText.textContent = "Offline";
+          statusText.className =
+            "font-pixel text-[9px] uppercase tracking-widest text-text-muted";
+          statusText.style.color = "";
+        }
+        return;
+      }
+
+      const track = data.track;
+
+      if (trackEl) trackEl.textContent = track.name;
+      if (artistEl) artistEl.textContent = track.artist;
+
+      if (imageEl && track.image) {
+        imageEl.innerHTML = `<img src="${track.image}" alt="${track.name}" class="w-full h-full object-cover">`;
+      }
+
+      if (track.nowPlaying) {
+        if (statusDot) {
+          statusDot.className =
+            "w-1.5 h-1.5 rounded-full flex-shrink-0 -translate-y-[1px] animate-pulse";
+          statusDot.style.background = ACCENT;
+        }
+        if (statusText) {
+          statusText.textContent = "Now Playing";
+          statusText.className =
+            "font-pixel text-[9px] uppercase tracking-widest";
+          statusText.style.color = ACCENT;
+        }
+      } else {
+        if (statusDot) {
+          statusDot.className =
+            "w-1.5 h-1.5 rounded-full bg-text-muted flex-shrink-0 -translate-y-[1px]";
+          statusDot.style.background = "";
+        }
+        if (statusText) {
+          statusText.textContent = "Last Played";
+          statusText.className =
+            "font-pixel text-[9px] uppercase tracking-widest text-text-muted";
+          statusText.style.color = "";
+        }
+      }
+
+      if (linkEl && track.url) linkEl.href = track.url;
+    }
+
+    async function fetchData() {
+      try {
+        const now = Date.now();
+        if (now - lastFetch < FETCH_INTERVAL) return;
+        lastFetch = now;
+
+        const response = await fetch("/api/lastfm");
+        if (response.ok) {
+          const data = await response.json();
+          updateCard(data);
+          return;
+        }
+        throw new Error("Failed to fetch");
+      } catch (error) {
+        console.error("Error fetching Last.fm data:", error);
+        const trackEl = document.getElementById("lastfm-track");
+        const artistEl = document.getElementById("lastfm-artist");
+        if (trackEl) trackEl.textContent = "ERR_CONNECTION";
+        if (artistEl) artistEl.textContent = "Last.fm API unreachable";
+      }
+    }
+
+    fetchData();
+    setInterval(fetchData, FETCH_INTERVAL);
+
+    document.addEventListener("visibilitychange", () => {
+      if (!document.hidden) fetchData();
+    });
+
+    /* ── Recent tracks modal ─────────────────────────────────────────── */
+    const modal = document.getElementById("lastfm-modal");
+    const openBtn = document.getElementById("lastfm-recent-btn");
+    const listEl = document.getElementById("lastfm-list");
+    let loadedOnce = false;
+
+    function escapeHtml(str) {
+      return String(str ?? "").replace(
+        /[&<>"']/g,
+        (c) =>
+          ({
+            "&": "&amp;",
+            "<": "&lt;",
+            ">": "&gt;",
+            '"': "&quot;",
+            "'": "&#39;",
+          })[c],
+      );
+    }
+
+    function renderList(tracks) {
+      if (!listEl) return;
+      if (!tracks || tracks.length === 0) {
+        listEl.innerHTML =
+          '<p class="text-text-muted text-sm text-center py-8 font-pixel text-[10px] uppercase tracking-widest">No recent tracks</p>';
+        return;
+      }
+      listEl.innerHTML = tracks
+        .map((t) => {
+          const cover = t.image
+            ? `<img src="${escapeHtml(t.image)}" alt="" class="w-10 h-10 rounded object-cover flex-shrink-0 border border-highlight-med">`
+            : `<div class="w-10 h-10 rounded bg-overlay border border-highlight-med flex-shrink-0"></div>`;
+          const badge = t.nowPlaying
+            ? `<span class="flex-shrink-0 w-1.5 h-1.5 rounded-full animate-pulse" style="background:${ACCENT}"></span>`
+            : "";
+          return `
+            <a href="${escapeHtml(t.url)}" target="_blank" rel="noopener"
+               class="flex items-center gap-3 px-2 py-2 rounded-lg hover:bg-overlay transition-colors group">
+              ${cover}
+              <div class="flex-1 min-w-0">
+                <p class="text-sm font-semibold text-text-primary truncate group-hover:text-[var(--accent)] transition-colors" style="--accent:${ACCENT}">${escapeHtml(t.name)}</p>
+                <p class="text-xs text-text-muted truncate">${escapeHtml(t.artist)}</p>
+              </div>
+              <div class="flex items-center gap-2 flex-shrink-0">
+                ${badge}
+                <span class="text-[9px] font-pixel uppercase tracking-wider text-text-muted whitespace-nowrap">${escapeHtml(t.when)}</span>
+              </div>
+            </a>`;
+        })
+        .join("");
+    }
+
+    async function loadRecent() {
+      if (!listEl) return;
+      try {
+        const res = await fetch("/api/lastfm-recent");
+        const data = await res.json();
+        renderList(data.tracks);
+      } catch (err) {
+        console.error("Failed to load recent tracks:", err);
+        listEl.innerHTML =
+          '<p class="text-text-muted text-sm text-center py-8 font-pixel text-[10px] uppercase tracking-widest">Failed to load</p>';
+      }
+    }
+
+    function openModal() {
+      if (!modal) return;
+      modal.classList.remove("hidden");
+      modal.classList.add("flex");
+      document.body.style.overflow = "hidden";
+      if (!loadedOnce) {
+        loadedOnce = true;
+        loadRecent();
+      }
+    }
+
+    function closeModal() {
+      if (!modal) return;
+      modal.classList.add("hidden");
+      modal.classList.remove("flex");
+      document.body.style.overflow = "";
+    }
+
+    if (openBtn) openBtn.addEventListener("click", openModal);
+    if (modal) {
+      modal
+        .querySelector(".lastfm-modal-backdrop")
+        ?.addEventListener("click", closeModal);
+      modal
+        .querySelector(".lastfm-modal-close")
+        ?.addEventListener("click", closeModal);
+    }
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Escape" && modal && !modal.classList.contains("hidden"))
+        closeModal();
+    });
+  })();
+</script>

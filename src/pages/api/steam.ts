@@ -309,11 +309,41 @@ export const GET: APIRoute = async () => {
     const UPSTASH_URL = import.meta.env.UPSTASH_REDIS_REST_URL;
     const UPSTASH_TOKEN = import.meta.env.UPSTASH_REDIS_REST_TOKEN;
     if (UPSTASH_URL && UPSTASH_TOKEN) {
+      const auth = { Authorization: `Bearer ${UPSTASH_TOKEN}` };
+
       fetch(`${UPSTASH_URL}/set/last_played_game`, {
         method: 'POST',
-        headers: { Authorization: `Bearer ${UPSTASH_TOKEN}` },
+        headers: auth,
         body: JSON.stringify(game)
       }).catch(() => {});
+
+      // Maintain a rolling "recently played" list from Lanyard presence
+      // (most-recent-first, de-duped by name, capped at 10). This is what the
+      // games card's "recent" modal reads — no Steam Web API key required.
+      (async () => {
+        try {
+          const r = await fetch(`${UPSTASH_URL}/get/recent_games`, { headers: auth });
+          const j = await r.json();
+          let list: any[] = [];
+          try { if (j.result) list = JSON.parse(j.result); } catch {}
+          if (!Array.isArray(list)) list = [];
+
+          list = list.filter((x) => x && x.name !== game.name);
+          list.unshift({
+            name: game.name,
+            image: game.image,
+            application_id: game.application_id,
+            last_seen: game.last_seen,
+          });
+          list = list.slice(0, 10);
+
+          await fetch(`${UPSTASH_URL}/set/recent_games`, {
+            method: 'POST',
+            headers: auth,
+            body: JSON.stringify(list),
+          });
+        } catch {}
+      })();
     }
 
     return new Response(JSON.stringify({ game }), {

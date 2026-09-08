@@ -3,62 +3,60 @@ export const prerender = true;
 
 import Layout from "../layouts/Layout.astro";
 import Navbar from "../components/Navbar.astro";
-import TimelineItem from "../components/TimelineItem.astro";
 import TechStack from "../components/TechStack.astro";
 
+// Newest-first. All roles are ongoing ("Present").
 const timeline = [
   {
-    date: "2024 — Present",
-    title: "Tech Team Member — ACM Student Chapter ASEB",
+    date: "2026 — Present",
+    role: "CTF Player",
+    org: "Void Walkers",
     description:
-      "Joined the tech team. Mostly broke things first, then figured out how to fix them. Sometimes in that order.",
+      "More CTFs, more challenges, and hoping to actually understand heap exploitation someday.",
   },
   {
-    date: "2024 - Present",
-    title: "Senior Executive — FORGE",
+    date: "2026 — Present",
+    role: "Senior Executive",
+    org: "GDG ASEB",
+    description:
+      "Google Developer Groups on campus. Helping run events and keep the chaos organized.",
+  },
+  {
+    date: "2025 — Present",
+    role: "President",
+    org: "CSI Student Chapter ASEB",
+    description:
+      "Somehow became the person in charge. Still figuring out how that happened.",
+  },
+  {
+    date: "2025 — Present",
+    role: "CTF Player",
+    org: "Bi0s",
+    description:
+      "Started breaking into things legally — web exploitation and reverse engineering, mostly staring at hex dumps at 3 AM.",
+  },
+  {
+    date: "2024 — Present",
+    role: "Senior Executive",
+    org: "FORGE",
     description:
       "Forum of Game Engineering. Yes, the name is cool. Yes, that mattered when I joined.",
   },
   {
-    date: "2025 — Present",
-    title: "CTF Player — Bi0s",
+    date: "2024 — Present",
+    role: "Tech Team Member",
+    org: "ACM Student Chapter ASEB",
     description:
-      "Started breaking into things legally. Playing jeopardy-style CTFs for web exploitation and reverse engineering. Mostly just staring at hex dumps at 3 AM.",
-  },
-  {
-    date: "2026 — Present",
-    title: "CTF Player — Void Walkers",
-    description:
-      "Continuing the cybersecurity journey. More CTFs, more challenges, and hoping to actually understand heap exploitation someday.",
-  },
-  {
-    date: "2025 — 2026",
-    title: "President — CSI Student Chapter ASEB",
-    description:
-      "Somehow became the person in charge. Still figuring out how that happened.",
+      "Joined the tech team. Mostly broke things first, then figured out how to fix them. Sometimes in that order.",
   },
 ];
 
-const languages = [
-  "Python",
-  "C",
-  "C++",
-  "JavaScript",
-  "TypeScript",
-  "SQL",
-  "Bash",
-];
+const languages = ["Python", "C", "C++", "JavaScript", "TypeScript", "SQL", "Bash"];
 const frontend = ["React.js", "Next.js", "Astro", "Tailwind CSS", "Vite"];
 const backend = ["Node.js", "Express.js", "FastAPI", "Flask"];
 const security = ["Burp Suite", "Wireshark", "Nmap", "SQLi", "XSS", "CSRF"];
 const tools = ["Git", "Linux", "Docker", "MATLAB", "Figma", "Canva"];
-const spokenLanguages = [
-  "English",
-  "Kannada",
-  "Telugu",
-  "Hindi (basic)",
-  "Tamil (basic)",
-];
+const spokenLanguages = ["English", "Kannada", "Telugu", "Hindi (basic)", "Tamil (basic)"];
 
 const facts = [
   {
@@ -66,39 +64,35 @@ const facts = [
     chipColor: "text-primary",
     borderColor: "hover:border-primary/50",
     title: "Sub-30 Rubik's Cube",
-    subtitle:
-      "Not world record, but enough to make someone's jaw drop at a party.",
+    subtitle: "Not world record, but enough to make someone's jaw drop at a party.",
   },
   {
     chip: "COLLECTOR",
     chipColor: "text-tertiary",
     borderColor: "hover:border-tertiary/50",
     title: "Random Stuff",
-    subtitle:
-      "I get obsessed with collecting the most random things like guitar picks, stickers, etc.",
+    subtitle: "I get obsessed with collecting the most random things — guitar picks, stickers, etc.",
   },
   {
     chip: "FUEL",
     chipColor: "text-rosewater",
     borderColor: "hover:border-rosewater/50",
     title: "Chocolate, obviously",
-    subtitle:
-      "Not coffee, not energy drinks, not tea. Just chocolate. Every time.",
+    subtitle: "Not coffee, not energy drinks, not tea. Just chocolate. Every time.",
   },
   {
     chip: "MEDIA",
-    chipColor: "text-primary",
-    borderColor: "hover:border-primary/50",
+    chipColor: "text-sky",
+    borderColor: "hover:border-sky/50",
     title: "JJK & The Silent Patient",
     subtitle: "Anime, manga, novels — I consume it all.",
   },
   {
     chip: "SCHEDULE",
-    chipColor: "text-secondary",
-    borderColor: "hover:border-secondary/50",
+    chipColor: "text-green",
+    borderColor: "hover:border-green/50",
     title: "Night owl. Or early bird.",
-    subtitle:
-      "Depends on deadlines, vibes, and what YouTube recommended at 2am.",
+    subtitle: "Depends on deadlines, vibes, and what YouTube recommended at 2am.",
   },
 ];
 ---
@@ -106,12 +100,17 @@ const facts = [
 <Layout title="About | Chimera's Realm">
   <Navbar />
 
-  <div class="mt-8 max-w-4xl mx-auto space-y-20 animate-fade-in pb-20">
+  <!-- Enable reveal state before paint so there's no flash of content -->
+  <script is:inline>
+    if (!window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      document.documentElement.classList.add("reveal-on");
+    }
+  </script>
+
+  <div class="mt-8 max-w-4xl mx-auto space-y-20 pb-20">
     <!-- Header -->
-    <section>
-      <p class="font-pixel text-xs text-primary mb-4 tracking-widest">
-        WHO AM I
-      </p>
+    <section class="reveal">
+      <p class="font-pixel text-xs text-primary mb-4 tracking-widest">WHO AM I</p>
       <h1
         class="text-4xl md:text-5xl font-bold text-text-primary mb-6 leading-tight"
       >
@@ -120,27 +119,21 @@ const facts = [
       </h1>
       <div class="text-lg text-text-muted leading-relaxed space-y-4 max-w-2xl">
         <p>
-          A <span class="text-primary">Computer Science (AI)</span> student
-          at <span class="text-primary"
-            >Amrita Vishwa Vidyapeetam, Bengaluru</span
-          >, who sits somewhere between an introvert and an extrovert, with a
-          strong interest in full-stack development, cybersecurity, and building
-          things that solve real problems—or sometimes just satisfy my
-          curiosity.
+          I'm a <span class="text-primary">Computer Science (AI)</span> student at
+          <span class="text-primary">Amrita Vishwa Vidyapeetham, Bengaluru</span>.
+          Most of what I make lands somewhere between "this solves a real problem"
+          and "I was curious what would happen."
         </p>
         <p>
-          I enjoy developing web applications, exploring how systems work under
-          the hood, and automating tasks that take 5 seconds or 5 hours, just
-          because I can. Most of my projects start with a question, a random
-          idea, a minor inconvenience that refuses to leave my head, or a bit of
-          inspiration borrowed from something I came across online.
+          A lot of it is web apps, some of it is taking things apart to see how
+          they work, and a fair amount is automating stuff I didn't want to do
+          twice. Most projects start from a small annoyance that wouldn't leave my
+          head.
         </p>
         <p>
-          I spend most of my time building, breaking (legally), and improving
-          things. Most of my projects start as experiments; some become useful,
-          and a few even get finished. On quieter weekends, you'll usually find
-          me tackling a CTF challenge or two, or leaving a dozen half-finished
-          side projects open in another tab while trying to stay awake in class.
+          Some turn out useful. A few even get finished. On a slow weekend I'm
+          usually buried in a CTF challenge, or adding yet another half-done side
+          project to the pile of tabs I keep meaning to close.
         </p>
       </div>
     </section>
@@ -148,7 +141,7 @@ const facts = [
     <!-- Quick Stats / Vibes -->
     <section class="grid grid-cols-1 sm:grid-cols-2 gap-4">
       <div
-        class="bg-overlay border-2 border-highlight-med rounded-xl p-5 hover:border-primary/50 transition-colors group"
+        class="reveal bg-overlay border-2 border-highlight-med rounded-xl p-5 hover:border-primary/50 transition-colors group"
       >
         <p class="font-pixel text-xs text-primary mb-2 tracking-wider">STYLE</p>
         <p
@@ -161,7 +154,8 @@ const facts = [
         </p>
       </div>
       <div
-        class="bg-overlay border-2 border-highlight-med rounded-xl p-5 hover:border-tertiary/50 transition-colors group"
+        class="reveal bg-overlay border-2 border-highlight-med rounded-xl p-5 hover:border-tertiary/50 transition-colors group"
+        style="transition-delay:80ms"
       >
         <p class="font-pixel text-xs text-tertiary mb-2 tracking-wider">
           ACTUALLY
@@ -178,7 +172,7 @@ const facts = [
     <!-- Timeline -->
     <section>
       <h2
-        class="text-2xl font-bold text-text-primary mb-2 flex items-center gap-4"
+        class="reveal text-2xl font-bold text-text-primary mb-2 flex items-center gap-4"
       >
         <svg
           class="w-6 h-6 text-primary"
@@ -198,20 +192,31 @@ const facts = [
         </svg>
         Places That Let Me In
       </h2>
-      <p class="text-text-muted text-sm mb-8 ml-10">
-        Clubs, communities, and other places I somehow ended up in.
+      <p class="reveal text-text-muted text-sm mb-8 ml-10">
+        Clubs, communities, and other places I somehow ended up in — newest first.
       </p>
-      <div class="relative max-w-4xl mx-auto py-4">
-        <!-- Central Line (Desktop) / Left Line (Mobile) -->
-        <div class="absolute left-[20px] md:left-1/2 top-0 bottom-0 w-px bg-highlight-med/30 md:-translate-x-1/2"></div>
+      <div class="relative pl-1 py-2">
+        <!-- Vertical rail -->
+        <div class="absolute left-[6px] top-3 bottom-3 w-px bg-highlight-med/60"></div>
         {
           timeline.map((item, idx) => (
-            <TimelineItem
-              date={item.date}
-              title={item.title}
-              description={item.description}
-              isLeft={idx % 2 === 0}
-            />
+            <div
+              class="reveal relative pl-8 pb-9 last:pb-0"
+              style={`transition-delay:${idx * 70}ms`}
+            >
+              {/* Dot on the rail */}
+              <div class="absolute left-0 top-[3px] w-3.5 h-3.5 rounded-full bg-primary border-2 border-surface shadow-[0_0_10px_var(--primary)]" />
+              <div class="font-pixel text-[9px] text-primary uppercase tracking-widest">
+                {item.date}
+              </div>
+              <h3 class="font-bold text-text-primary text-base mt-2.5">
+                {item.role} <span class="text-highlight-med px-0.5">·</span>{" "}
+                <span class="text-primary">{item.org}</span>
+              </h3>
+              <p class="text-text-muted text-sm mt-1.5 max-w-[62ch] leading-relaxed">
+                {item.description}
+              </p>
+            </div>
           ))
         }
       </div>
@@ -220,7 +225,7 @@ const facts = [
     <!-- Tech Stack -->
     <section id="skills">
       <h2
-        class="text-2xl font-bold text-text-primary mb-2 flex items-center gap-4"
+        class="reveal text-2xl font-bold text-text-primary mb-2 flex items-center gap-4"
       >
         <svg
           class="w-6 h-6 text-secondary"
@@ -236,10 +241,12 @@ const facts = [
         >
         Current Loadout
       </h2>
-      <p class="text-text-muted text-sm mb-8 ml-10">
+      <p class="reveal text-text-muted text-sm mb-8 ml-10">
         Things I actually use. GitHub has more receipts.
       </p>
-      <div class="bg-overlay border-2 border-highlight-med rounded-xl p-6 md:p-8">
+      <div
+        class="reveal bg-overlay border-2 border-highlight-med rounded-xl p-6 md:p-8"
+      >
         <TechStack category="Spoken Languages" skills={spokenLanguages} />
         <TechStack category="Programming Languages" skills={languages} />
         <TechStack category="Frontend" skills={frontend} />
@@ -252,7 +259,7 @@ const facts = [
     <!-- Fun Facts -->
     <section>
       <h2
-        class="text-2xl font-bold text-text-primary mb-2 flex items-center gap-4"
+        class="reveal text-2xl font-bold text-text-primary mb-2 flex items-center gap-4"
       >
         <svg
           class="w-6 h-6 text-tertiary"
@@ -268,31 +275,21 @@ const facts = [
         >
         Other Than That
       </h2>
-      <p class="text-text-muted text-sm mb-8 ml-10">
-        The stuff that doesn't go on a resume.
+      <p class="reveal text-text-muted text-sm mb-8 ml-10">
+        The stuff that doesn't go on a résumé.
       </p>
       <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         {
-          facts.map((fact) => (
+          facts.map((fact, idx) => (
             <div
-              class={`bg-overlay border-2 border-highlight-med rounded-xl p-5 transition-colors group ${fact.borderColor}`}
+              class={`reveal bg-overlay border-2 border-highlight-med rounded-xl p-5 transition-colors group ${fact.borderColor}`}
+              style={`transition-delay:${idx * 60}ms`}
             >
-              <div class="flex items-center gap-3 mb-3">
-                <span class="text-2xl">{fact.icon}</span>
-                <p
-                  class={`font-pixel text-xs tracking-wider ${fact.chipColor}`}
-                >
-                  {fact.chip}
-                </p>
-              </div>
-              <p
-                class={`font-bold text-base text-text-primary mb-1 transition-colors group-hover:${fact.chipColor.replace("text-", "text-")}`}
-              >
-                {fact.title}
+              <p class={`font-pixel text-xs tracking-wider mb-3 ${fact.chipColor}`}>
+                {fact.chip}
               </p>
-              <p class="text-text-muted text-sm leading-relaxed">
-                {fact.subtitle}
-              </p>
+              <p class="font-bold text-base text-text-primary mb-1">{fact.title}</p>
+              <p class="text-text-muted text-sm leading-relaxed">{fact.subtitle}</p>
             </div>
           ))
         }
@@ -300,31 +297,76 @@ const facts = [
     </section>
 
     <!-- Sign-off -->
-    <section class="border-t border-highlight-med pt-10 text-center">
+    <section class="reveal border-t border-highlight-med pt-10 text-center">
       <p class="text-text-muted text-sm leading-relaxed max-w-lg mx-auto">
-        If you made it this far, thanks for reading. If you want to build something cool, break something, or just
-        talk tech, my inbox is open.
+        If you made it this far, thanks for reading. Want to build something,
+        break something, or just talk tech? My inbox is open.
       </p>
-      <p class="font-pixel text-xs text-primary mt-4 tracking-widest">
-        — peace
-      </p>
+      <p class="font-pixel text-xs text-primary mt-4 tracking-widest">— peace</p>
     </section>
   </div>
 </Layout>
 
 <style>
-  .animate-fade-in {
-    animation: fadeIn 0.5s ease-out forwards;
+  /* Scroll-reveal — only active when JS adds `reveal-on` (so no-JS / reduced
+     motion always sees content). Items animate from a visible resting concept. */
+  html.reveal-on .reveal {
+    opacity: 0;
+    transform: translateY(28px);
+    transition:
+      opacity 0.6s cubic-bezier(0.16, 1, 0.3, 1),
+      transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
   }
-  @keyframes fadeIn {
-    from {
-      opacity: 0;
-      transform: translateY(10px);
-    }
-    to {
+  html.reveal-on .reveal.is-visible {
+    opacity: 1;
+    transform: none;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    html.reveal-on .reveal {
       opacity: 1;
-      transform: translateY(0);
+      transform: none;
+      transition: none;
     }
   }
 </style>
 
+<script>
+  let io: IntersectionObserver | undefined;
+
+  function setupReveal() {
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      document.documentElement.classList.remove("reveal-on");
+      return;
+    }
+    document.documentElement.classList.add("reveal-on");
+
+    if (!io) {
+      io = new IntersectionObserver(
+        (entries) => {
+          for (const entry of entries) {
+            if (entry.isIntersecting) {
+              entry.target.classList.add("is-visible");
+              io!.unobserve(entry.target);
+            }
+          }
+        },
+        { threshold: 0.1, rootMargin: "0px 0px -6% 0px" },
+      );
+    }
+
+    const vh = window.innerHeight;
+    document.querySelectorAll(".reveal:not(.is-visible)").forEach((el) => {
+      // Anything already in view or scrolled past reveals immediately;
+      // only below-the-fold items wait for the scroll animation.
+      if (el.getBoundingClientRect().top < vh * 0.95) {
+        el.classList.add("is-visible");
+      } else {
+        io!.observe(el);
+      }
+    });
+  }
+
+  setupReveal();
+  document.addEventListener("astro:page-load", setupReveal);
+</script>
